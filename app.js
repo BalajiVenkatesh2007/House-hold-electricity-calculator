@@ -8,9 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
+  // Helper to ensure every appliance has a unique ID
+  function ensureApplianceIds(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item, idx) => ({
+      ...item,
+      id: item.id || `app_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`
+    }));
+  }
+
   // Application State
   const state = {
-    appliances: [...DEFAULT_APPLIANCES],
+    appliances: ensureApplianceIds(DEFAULT_APPLIANCES),
     currency: CURRENCY_DATABASE.USD,
     tariffMode: 'flat', // 'flat' | 'tiered' | 'tou'
     flatRate: 0.16,
@@ -94,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
   homePreset.addEventListener('change', (e) => {
     const val = e.target.value;
     if (val !== 'custom' && PRESET_HOMES[val]) {
-      state.appliances = JSON.parse(JSON.stringify(PRESET_HOMES[val].appliances));
+      state.appliances = ensureApplianceIds(JSON.parse(JSON.stringify(PRESET_HOMES[val].appliances)));
       showToast(`Loaded profile: ${PRESET_HOMES[val].name}`);
       recalculateAll();
     }
@@ -122,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Reset button
   btnReset.addEventListener('click', () => {
     if (confirm('Reset all appliance data and custom rates to defaults?')) {
-      state.appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
+      state.appliances = ensureApplianceIds(DEFAULT_APPLIANCES);
       state.tariffMode = 'flat';
       state.simTemp = 0;
       state.simSolar = 0;
@@ -148,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!name || isNaN(watts) || isNaN(hoursPerDay)) return;
 
     const newApp = {
-      id: 'custom_' + Date.now(),
+      id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       name,
       room,
       watts,
@@ -241,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calculation Utilities
   function calculateApplianceMonthlyKwh(app) {
+    if (!app) return 0;
     const qty = app.quantity || 1;
     const ratio = app.dutyCycleRatio || 1.0;
     const dailyHours = app.hoursPerDay * ratio;
@@ -295,10 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyCost = monthlyCost / 30;
     const dailyKwh = totalMonthlyKwh / 30;
 
-    const co2Kg = totalMonthlyKwh * state.currency.co2;
-    const treesNeeded = Math.ceil(co2Kg / 1.83); // ~22kg/yr absorption
+    const co2Kg = totalMonthlyKwh * (state.currency.co2 || 0.385);
+    const treesNeeded = Math.ceil(co2Kg / 1.83);
 
-    const symbol = state.currency.symbol;
+    const symbol = state.currency.symbol || '$';
 
     metricCost.textContent = `${symbol}${monthlyCost.toFixed(2)}`;
     metricDailyCost.textContent = `Daily Average: ${symbol}${dailyCost.toFixed(2)}`;
@@ -317,57 +327,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderApplianceTable() {
     const tbody = document.getElementById('applianceTableBody');
+    if (!tbody) return;
     tbody.innerHTML = '';
+
+    // If appliances list is empty, show restore button
+    if (!state.appliances || state.appliances.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center; padding:30px; color: var(--text-muted);">
+            <div>No appliances in list.</div>
+            <button id="btnRestoreDefaults" class="btn btn-primary" style="margin-top:12px;">
+              <i data-lucide="rotate-ccw"></i> Restore Default Appliances
+            </button>
+          </td>
+        </tr>
+      `;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      const btnRestore = document.getElementById('btnRestoreDefaults');
+      if (btnRestore) {
+        btnRestore.addEventListener('click', () => {
+          state.appliances = ensureApplianceIds(DEFAULT_APPLIANCES);
+          recalculateAll();
+        });
+      }
+      return;
+    }
 
     const filtered = state.filterRoom === 'all' 
       ? state.appliances 
       : state.appliances.filter(a => a.room === state.filterRoom);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding:24px;">No devices found in this room category.</td></tr>`;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center; color: var(--text-muted); padding:24px;">
+            No devices found in room "${state.filterRoom}". Change filter to "All Room Categories".
+          </td>
+        </tr>
+      `;
       return;
     }
 
     const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
     const totalCost = calculateTariffCost(totalKwh);
 
-    filtered.forEach((app, index) => {
-      // Find actual index in state.appliances array
-      const realIndex = state.appliances.findIndex(a => a.id === app.id);
-      const activeIdx = realIndex !== -1 ? realIndex : index;
-
+    filtered.forEach((app) => {
       const monthlyKwh = calculateApplianceMonthlyKwh(app);
       const appCost = totalKwh > 0 ? (monthlyKwh / totalKwh) * totalCost : 0;
-      const symbol = state.currency.symbol;
+      const symbol = state.currency.symbol || '$';
 
       const tr = document.createElement('tr');
+      tr.setAttribute('data-id', app.id);
       tr.innerHTML = `
         <td>
-          <input type="text" value="${app.name}" data-index="${activeIdx}" data-field="name" style="width:100%; font-weight:600;" placeholder="Appliance Name">
+          <input type="text" value="${app.name || ''}" data-id="${app.id}" data-field="name" style="width:100%; font-weight:600;" placeholder="Appliance Name">
         </td>
         <td>
-          <select data-index="${activeIdx}" data-field="room" style="width:100%; font-size:0.85rem;">
+          <select data-id="${app.id}" data-field="room" style="width:100%; font-size:0.85rem;">
             ${Object.keys(ROOM_CATEGORIES).map(rKey => `
               <option value="${rKey}" ${app.room === rKey ? 'selected' : ''}>${ROOM_CATEGORIES[rKey].name}</option>
             `).join('')}
           </select>
         </td>
         <td>
-          <input type="number" value="${app.watts}" min="1" max="10000" style="width:75px;" data-index="${activeIdx}" data-field="watts"> W
+          <input type="number" value="${app.watts || 0}" min="1" max="10000" style="width:75px;" data-id="${app.id}" data-field="watts"> W
         </td>
         <td>
-          <input type="number" value="${app.hoursPerDay}" min="0.1" max="24" step="0.1" style="width:65px;" data-index="${activeIdx}" data-field="hoursPerDay"> h
+          <input type="number" value="${app.hoursPerDay || 0}" min="0.1" max="24" step="0.1" style="width:65px;" data-id="${app.id}" data-field="hoursPerDay"> h
         </td>
         <td>
-          <input type="number" value="${app.daysPerWeek !== undefined ? app.daysPerWeek : 7}" min="1" max="7" style="width:55px;" data-index="${activeIdx}" data-field="daysPerWeek"> d
+          <input type="number" value="${app.daysPerWeek !== undefined ? app.daysPerWeek : 7}" min="1" max="7" style="width:55px;" data-id="${app.id}" data-field="daysPerWeek"> d
         </td>
         <td>
-          <input type="number" value="${app.quantity || 1}" min="1" max="50" style="width:55px;" data-index="${activeIdx}" data-field="quantity">
+          <input type="number" value="${app.quantity || 1}" min="1" max="50" style="width:55px;" data-id="${app.id}" data-field="quantity">
         </td>
-        <td><strong>${monthlyKwh.toFixed(1)}</strong> kWh</td>
-        <td style="color:var(--primary-emerald); font-weight:600;">${symbol}${appCost.toFixed(2)}</td>
+        <td class="cell-kwh"><strong>${monthlyKwh.toFixed(1)}</strong> kWh</td>
+        <td class="cell-cost" style="color:var(--primary-emerald); font-weight:600;">${symbol}${appCost.toFixed(2)}</td>
         <td>
-          <button class="icon-btn btn-delete" data-index="${activeIdx}" title="Delete Appliance">
+          <button class="icon-btn btn-delete" data-id="${app.id}" title="Delete Appliance">
             <i data-lucide="trash-2"></i>
           </button>
         </td>
@@ -378,43 +415,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // Attach listeners for live inline row edits (Name, Room, Watts, Hours, Days, Quantity)
+    // Attach listeners for live inline row edits using unique data-id
     tbody.querySelectorAll('input, select').forEach(element => {
       const handleEdit = (e) => {
-        const idx = parseInt(e.target.getAttribute('data-index'));
+        const appId = e.target.getAttribute('data-id');
         const field = e.target.getAttribute('data-field');
-        if (isNaN(idx) || !state.appliances[idx]) return;
+        const targetApp = state.appliances.find(a => a.id === appId);
+        if (!targetApp) return;
 
         let val = e.target.value;
         if (field === 'watts' || field === 'hoursPerDay' || field === 'daysPerWeek' || field === 'quantity') {
-          val = parseFloat(val);
-          if (isNaN(val)) return;
+          const numVal = parseFloat(val);
+          if (isNaN(numVal)) return;
+          val = numVal;
         }
 
-        state.appliances[idx][field] = val;
+        targetApp[field] = val;
         homePreset.value = 'custom';
-        
-        // Update calculations live
+
+        // Update overall app metrics
         updateMetrics();
         renderEnergyTips();
         updateSimulatorResults();
         saveStateToLocalStorage();
 
-        // Update the monthly kWh and cost cell for this specific row without re-rendering inputs (prevents focus loss)
-        const row = e.target.closest('tr');
+        // Update single row calculations directly without losing element focus
+        const row = tbody.querySelector(`tr[data-id="${appId}"]`);
         if (row) {
-          const app = state.appliances[idx];
-          const mKwh = calculateApplianceMonthlyKwh(app);
+          const mKwh = calculateApplianceMonthlyKwh(targetApp);
           const tKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
           const tCost = calculateTariffCost(tKwh);
           const aCost = tKwh > 0 ? (mKwh / tKwh) * tCost : 0;
-          const symbol = state.currency.symbol;
+          const symbol = state.currency.symbol || '$';
 
-          const cells = row.querySelectorAll('td');
-          if (cells.length >= 8) {
-            cells[6].innerHTML = `<strong>${mKwh.toFixed(1)}</strong> kWh`;
-            cells[7].innerHTML = `${symbol}${aCost.toFixed(2)}`;
-          }
+          const kwhCell = row.querySelector('.cell-kwh');
+          const costCell = row.querySelector('.cell-cost');
+          if (kwhCell) kwhCell.innerHTML = `<strong>${mKwh.toFixed(1)}</strong> kWh`;
+          if (costCell) costCell.innerHTML = `${symbol}${aCost.toFixed(2)}`;
         }
       };
 
@@ -424,9 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delete button listeners
     tbody.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-index'));
-        if (!isNaN(idx) && state.appliances[idx]) {
+      btn.addEventListener('click', (e) => {
+        const appId = btn.getAttribute('data-id');
+        const idx = state.appliances.findIndex(a => a.id === appId);
+        if (idx !== -1) {
           const removed = state.appliances.splice(idx, 1);
           if (removed.length) showToast(`Removed "${removed[0].name}"`);
           homePreset.value = 'custom';
@@ -439,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Energy Saving Advice Engine
   function generateTips() {
     const tips = [];
-    const symbol = state.currency.symbol;
+    const symbol = state.currency.symbol || '$';
     const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
     const totalCost = calculateTariffCost(totalKwh);
 
@@ -455,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Water heater check
-    const geyser = state.appliances.find(a => a.name.toLowerCase().includes('geyser') || a.name.toLowerCase().includes('water'));
+    const geyser = state.appliances.find(a => (a.name || '').toLowerCase().includes('geyser') || (a.name || '').toLowerCase().includes('water'));
     if (geyser && geyser.hoursPerDay >= 1.5) {
       tips.push({
         title: 'Install Digital Water Heater Timer',
@@ -492,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderEnergyTips() {
     const container = document.getElementById('tipsGridContainer');
+    if (!container) return;
     container.innerHTML = '';
     const tips = generateTips();
 
@@ -562,11 +601,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const netSavings = Math.max(0, baseBill - simBill);
-    const symbol = state.currency.symbol;
+    const symbol = state.currency.symbol || '$';
 
-    document.getElementById('simCurrentBill').textContent = `${symbol}${baseBill.toFixed(2)}`;
-    document.getElementById('simOptimizedBill').textContent = `${symbol}${simBill.toFixed(2)}`;
-    document.getElementById('simNetSavings').textContent = `${symbol}${netSavings.toFixed(2)}/mo`;
+    const currentElem = document.getElementById('simCurrentBill');
+    const optElem = document.getElementById('simOptimizedBill');
+    const savElem = document.getElementById('simNetSavings');
+
+    if (currentElem) currentElem.textContent = `${symbol}${baseBill.toFixed(2)}`;
+    if (optElem) optElem.textContent = `${symbol}${simBill.toFixed(2)}`;
+    if (savElem) savElem.textContent = `${symbol}${netSavings.toFixed(2)}/mo`;
   }
 
   // Chart Rendering
@@ -686,10 +729,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem('hec_state_v2');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.appliances) state.appliances = parsed.appliances;
+        if (parsed.appliances && Array.isArray(parsed.appliances) && parsed.appliances.length > 0) {
+          state.appliances = ensureApplianceIds(parsed.appliances);
+        } else {
+          state.appliances = ensureApplianceIds(DEFAULT_APPLIANCES);
+        }
+
         if (parsed.currencyCode && CURRENCY_DATABASE[parsed.currencyCode]) {
           state.currency = CURRENCY_DATABASE[parsed.currencyCode];
-          currencySelect.value = parsed.currencyCode;
+          if (currencySelect) currencySelect.value = parsed.currencyCode;
         }
         if (parsed.tariffMode) state.tariffMode = parsed.tariffMode;
         if (parsed.flatRate) state.flatRate = parsed.flatRate;
@@ -697,12 +745,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (parsed.touRates) state.touRates = parsed.touRates;
         if (parsed.fixedFee !== undefined) state.fixedFee = parsed.fixedFee;
         if (parsed.taxPct !== undefined) state.taxPct = parsed.taxPct;
+      } else {
+        state.appliances = ensureApplianceIds(DEFAULT_APPLIANCES);
       }
-    } catch (e) {}
+    } catch (e) {
+      state.appliances = ensureApplianceIds(DEFAULT_APPLIANCES);
+    }
   }
 
   function showToast(msg) {
     const stack = document.getElementById('toastStack');
+    if (!stack) return;
     const toast = document.createElement('div');
     toast.className = 'toast-msg';
     toast.textContent = msg;
