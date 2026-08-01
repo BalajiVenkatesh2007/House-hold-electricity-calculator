@@ -1,14 +1,17 @@
-// Household Energy Usage & Cost Calculator Application Core
+/**
+ * Household Energy Calculator - Application Engine
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Lucide icons
+  // Initialize Lucide Icons
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 
-  // State Management
+  // Application State
   const state = {
     appliances: [...DEFAULT_APPLIANCES],
-    currency: CURRENCIES.USD,
+    currency: CURRENCY_DATABASE.USD,
     tariffMode: 'flat', // 'flat' | 'tiered' | 'tou'
     flatRate: 0.16,
     tierRates: { tier1: 0.12, tier2: 0.18, tier3: 0.28 },
@@ -17,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     taxPct: 5.0,
     activeTab: 'tab-appliances',
     filterRoom: 'all',
-    // Simulator states
+
+    // Simulator slider states
     simTemp: 0,
     simSolar: 0,
     simLed: 0,
@@ -26,14 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Chart instances
   let roomChart = null;
-  let topApplianceChart = null;
+  let topChart = null;
 
-  // DOM Elements
-  const presetSelect = document.getElementById('presetSelect');
+  // DOM Handles
+  const homePreset = document.getElementById('homePreset');
   const currencySelect = document.getElementById('currencySelect');
   const btnExportCsv = document.getElementById('btnExportCsv');
   const btnReset = document.getElementById('btnReset');
-  const filterRoomSelect = document.getElementById('filterRoomSelect');
+  const filterRoom = document.getElementById('filterRoom');
 
   // Metrics DOM
   const metricCost = document.getElementById('metricCost');
@@ -45,66 +49,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const metricSavings = document.getElementById('metricSavings');
   const metricSavingsPct = document.getElementById('metricSavingsPct');
 
-  // Load saved state from LocalStorage if available
-  loadStateFromLocalStorage();
+  // Load state from local storage if available
+  loadLocalStorageState();
 
-  // Navigation Tabs Listener
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const targetTab = btn.getAttribute('data-tab');
-      switchTab(targetTab);
+  // Tab navigation listeners
+  document.querySelectorAll('.tab-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.getAttribute('data-tab');
+      switchTab(tabId);
     });
   });
 
   function switchTab(tabId) {
     state.activeTab = tabId;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-    const activePanel = document.getElementById(tabId);
-    if (activeBtn) activeBtn.classList.add('active');
-    if (activePanel) activePanel.classList.add('active');
+    const targetLink = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+    const targetContent = document.getElementById(tabId);
+    if (targetLink) targetLink.classList.add('active');
+    if (targetContent) targetContent.classList.add('active');
 
     if (tabId === 'tab-analytics') {
       renderCharts();
     }
   }
 
-  // Tariff mode selection
-  document.querySelectorAll('.tariff-mode-card').forEach(card => {
+  // Tariff mode switcher
+  document.querySelectorAll('.tariff-card').forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.tariff-mode-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
+      document.querySelectorAll('.tariff-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
       state.tariffMode = card.getAttribute('data-mode');
 
-      document.getElementById('flatTariffConfig').style.display = state.tariffMode === 'flat' ? 'block' : 'none';
-      document.getElementById('tieredTariffConfig').style.display = state.tariffMode === 'tiered' ? 'block' : 'none';
-      document.getElementById('touTariffConfig').style.display = state.tariffMode === 'tou' ? 'block' : 'none';
+      document.getElementById('flatConfig').style.display = state.tariffMode === 'flat' ? 'block' : 'none';
+      document.getElementById('tieredConfig').style.display = state.tariffMode === 'tiered' ? 'block' : 'none';
+      document.getElementById('touConfig').style.display = state.tariffMode === 'tou' ? 'block' : 'none';
 
-      recalculateAndRender();
+      recalculateAll();
     });
   });
 
-  // Event Listeners for Preset & Currency
-  presetSelect.addEventListener('change', (e) => {
+  // Preset profile listener
+  homePreset.addEventListener('change', (e) => {
     const val = e.target.value;
-    if (val !== 'custom' && PRESET_PROFILES[val]) {
-      state.appliances = JSON.parse(JSON.stringify(PRESET_PROFILES[val].appliances));
-      showToast(`Loaded preset profile: ${PRESET_PROFILES[val].name}`);
-      recalculateAndRender();
+    if (val !== 'custom' && PRESET_HOMES[val]) {
+      state.appliances = JSON.parse(JSON.stringify(PRESET_HOMES[val].appliances));
+      showToast(`Loaded profile: ${PRESET_HOMES[val].name}`);
+      recalculateAll();
     }
   });
 
+  // Currency select listener
   currencySelect.addEventListener('change', (e) => {
-    const currKey = e.target.value;
-    if (CURRENCIES[currKey]) {
-      state.currency = CURRENCIES[currKey];
-      state.flatRate = state.currency.ratePerKwh;
-      document.getElementById('inputFlatRate').value = state.flatRate.toFixed(2);
+    const code = e.target.value;
+    if (CURRENCY_DATABASE[code]) {
+      state.currency = CURRENCY_DATABASE[code];
+      state.flatRate = state.currency.rate;
+      document.getElementById('flatRateInput').value = state.flatRate.toFixed(2);
       updateCurrencySymbols();
-      recalculateAndRender();
-      showToast(`Switched currency to ${state.currency.name} (${state.currency.symbol})`);
+      recalculateAll();
+      showToast(`Currency set to ${state.currency.name} (${state.currency.symbol})`);
     }
   });
 
@@ -114,18 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Reset Button
+  // Reset button
   btnReset.addEventListener('click', () => {
-    if (confirm('Reset all appliances and tariff settings to default?')) {
+    if (confirm('Reset all appliance data and custom rates to defaults?')) {
       state.appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
       state.tariffMode = 'flat';
       state.simTemp = 0;
       state.simSolar = 0;
       state.simLed = 0;
       state.simShift = 0;
-      presetSelect.value = 'custom';
-      recalculateAndRender();
-      showToast('App state has been reset to defaults.');
+      homePreset.value = 'custom';
+      recalculateAll();
+      showToast('App state has been reset.');
     }
   });
 
@@ -137,7 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const room = document.getElementById('newAppRoom').value;
     const watts = parseFloat(document.getElementById('newAppWatts').value);
     const hoursPerDay = parseFloat(document.getElementById('newAppHours').value);
-    const daysPerWeek = parseFloat(document.getElementById('newAppDays').value);
+    const daysPerWeek = parseFloat(document.getElementById('newAppDays').value) || 7;
+    const qty = parseInt(document.getElementById('newAppQty').value) || 1;
 
     if (!name || isNaN(watts) || isNaN(hoursPerDay)) return;
 
@@ -146,102 +152,102 @@ document.addEventListener('DOMContentLoaded', () => {
       name,
       room,
       watts,
+      quantity: qty,
       hoursPerDay,
-      daysPerWeek: isNaN(daysPerWeek) ? 7 : daysPerWeek,
-      tip: `Custom appliance added (${watts}W, ${hoursPerDay}h/day).`
+      daysPerWeek,
+      dutyCycleRatio: 1.0,
+      icon: 'zap',
+      tip: `Custom device (${watts}W, ${hoursPerDay}h/day)`
     };
 
     state.appliances.push(newApp);
     addApplianceForm.reset();
     document.getElementById('newAppDays').value = 7;
-    presetSelect.value = 'custom';
-    showToast(`Added "${name}" to list.`);
-    recalculateAndRender();
+    document.getElementById('newAppQty').value = 1;
+    homePreset.value = 'custom';
+    showToast(`Added "${name}"`);
+    recalculateAll();
   });
 
-  // Filter appliances table by room
-  filterRoomSelect.addEventListener('change', (e) => {
+  // Room Filter Listener
+  filterRoom.addEventListener('change', (e) => {
     state.filterRoom = e.target.value;
     renderApplianceTable();
   });
 
-  // Inputs change listener for tariffs
-  document.getElementById('inputFlatRate').addEventListener('input', (e) => {
+  // Tariff input listeners
+  document.getElementById('flatRateInput').addEventListener('input', (e) => {
     state.flatRate = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
-
   document.getElementById('tier1Rate').addEventListener('input', (e) => {
     state.tierRates.tier1 = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
   document.getElementById('tier2Rate').addEventListener('input', (e) => {
     state.tierRates.tier2 = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
   document.getElementById('tier3Rate').addEventListener('input', (e) => {
     state.tierRates.tier3 = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
-
   document.getElementById('touPeakRate').addEventListener('input', (e) => {
     state.touRates.peak = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
   document.getElementById('touOffPeakRate').addEventListener('input', (e) => {
     state.touRates.offPeak = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
   document.getElementById('touPeakShare').addEventListener('input', (e) => {
     state.touRates.peakShare = parseFloat(e.target.value) || 0;
     document.getElementById('touPeakShareVal').textContent = `${state.touRates.peakShare}%`;
-    recalculateAndRender();
+    recalculateAll();
   });
-
   document.getElementById('fixedMonthlyFee').addEventListener('input', (e) => {
     state.fixedFee = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
   document.getElementById('taxPercentage').addEventListener('input', (e) => {
     state.taxPct = parseFloat(e.target.value) || 0;
-    recalculateAndRender();
+    recalculateAll();
   });
 
-  // Simulator Sliders listeners
+  // Simulator slider listeners
   document.getElementById('simTempSlider').addEventListener('input', (e) => {
     state.simTemp = parseInt(e.target.value);
     document.getElementById('simTempVal').textContent = state.simTemp > 0 ? `+${state.simTemp}°C Saved` : `+0°C (Default)`;
     updateSimulatorResults();
   });
-
   document.getElementById('simSolarSlider').addEventListener('input', (e) => {
     state.simSolar = parseFloat(e.target.value);
-    document.getElementById('simSolarVal').textContent = state.simSolar > 0 ? `${state.simSolar} kW Installed` : `0 kW (No Solar)`;
+    document.getElementById('simSolarVal').textContent = state.simSolar > 0 ? `${state.simSolar} kW System` : `0 kW (No Solar)`;
     updateSimulatorResults();
   });
-
   document.getElementById('simLedSlider').addEventListener('input', (e) => {
     state.simLed = parseInt(e.target.value);
     document.getElementById('simLedVal').textContent = `${state.simLed}% Converted`;
     updateSimulatorResults();
   });
-
   document.getElementById('simShiftSlider').addEventListener('input', (e) => {
     state.simShift = parseInt(e.target.value);
     document.getElementById('simShiftVal').textContent = `${state.simShift}% Shifted`;
     updateSimulatorResults();
   });
 
-  // Export CSV
+  // Export CSV Listener
   btnExportCsv.addEventListener('click', exportToCsv);
 
-  // Calculations Core
+  // Calculation Utilities
   function calculateApplianceMonthlyKwh(app) {
-    const ratio = app.dutyCycleRatio || (app.isDutyCycle ? 0.45 : 1.0);
+    const qty = app.quantity || 1;
+    const ratio = app.dutyCycleRatio || 1.0;
     const dailyHours = app.hoursPerDay * ratio;
-    const weeklyHours = dailyHours * (app.daysPerWeek || 7);
+    const daysPerWk = app.daysPerWeek !== undefined ? app.daysPerWeek : 7;
+    const weeklyHours = dailyHours * daysPerWk;
     const monthlyHours = (weeklyHours / 7) * 30;
-    return (app.watts * monthlyHours) / 1000;
+    return ((app.watts * qty) * monthlyHours) / 1000;
   }
 
   function calculateTariffCost(totalKwh) {
@@ -250,13 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.tariffMode === 'flat') {
       energyCharge = totalKwh * state.flatRate;
     } else if (state.tariffMode === 'tiered') {
-      const tier1Kwh = Math.min(totalKwh, 150);
-      const tier2Kwh = Math.max(0, Math.min(totalKwh - 150, 200));
-      const tier3Kwh = Math.max(0, totalKwh - 350);
+      const block1 = Math.min(totalKwh, 150);
+      const block2 = Math.max(0, Math.min(totalKwh - 150, 200));
+      const block3 = Math.max(0, totalKwh - 350);
 
-      energyCharge = (tier1Kwh * state.tierRates.tier1) +
-                     (tier2Kwh * state.tierRates.tier2) +
-                     (tier3Kwh * state.tierRates.tier3);
+      energyCharge = (block1 * state.tierRates.tier1) +
+                     (block2 * state.tierRates.tier2) +
+                     (block3 * state.tierRates.tier3);
     } else if (state.tariffMode === 'tou') {
       const peakKwh = totalKwh * (state.touRates.peakShare / 100);
       const offPeakKwh = totalKwh - peakKwh;
@@ -268,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(0, totalCost);
   }
 
-  function recalculateAndRender() {
+  function recalculateAll() {
     renderApplianceTable();
     updateMetrics();
     renderEnergyTips();
@@ -289,27 +295,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyCost = monthlyCost / 30;
     const dailyKwh = totalMonthlyKwh / 30;
 
-    // Carbon emissions: total kWh * co2 factor
-    const co2Kg = totalMonthlyKwh * state.currency.co2Factor;
-    // 1 mature tree absorbs ~22kg CO2 per year (~1.83kg per month)
-    const treesNeeded = Math.ceil(co2Kg / 1.83);
+    const co2Kg = totalMonthlyKwh * state.currency.co2;
+    const treesNeeded = Math.ceil(co2Kg / 1.83); // ~22kg/yr absorption
 
     const symbol = state.currency.symbol;
 
     metricCost.textContent = `${symbol}${monthlyCost.toFixed(2)}`;
-    metricDailyCost.textContent = `Daily Avg: ${symbol}${dailyCost.toFixed(2)}`;
+    metricDailyCost.textContent = `Daily Average: ${symbol}${dailyCost.toFixed(2)}`;
 
     metricKwh.textContent = `${totalMonthlyKwh.toFixed(1)} kWh`;
-    metricDailyKwh.textContent = `Daily Avg: ${dailyKwh.toFixed(1)} kWh`;
+    metricDailyKwh.textContent = `Daily Average: ${dailyKwh.toFixed(1)} kWh`;
 
     metricCo2.textContent = `${co2Kg.toFixed(1)} kg CO₂`;
-    metricTrees.textContent = `≈ ${treesNeeded} trees needed to offset/yr`;
+    metricTrees.textContent = `≈ ${treesNeeded} trees offset/yr`;
 
-    // Estimate potential savings from tips & recommendations
-    const savingsEst = calculateTotalPotentialSavings(totalMonthlyKwh, monthlyCost);
-    metricSavings.textContent = `${symbol}${savingsEst.monthly.toFixed(2)} / mo`;
-    const savingsPct = monthlyCost > 0 ? ((savingsEst.monthly / monthlyCost) * 100).toFixed(0) : 0;
-    metricSavingsPct.textContent = `Up to ${savingsPct}% bill reduction`;
+    const savings = calculatePotentialSavings(totalMonthlyKwh, monthlyCost);
+    metricSavings.textContent = `${symbol}${savings.monthly.toFixed(2)}`;
+    const pct = monthlyCost > 0 ? ((savings.monthly / monthlyCost) * 100).toFixed(0) : 0;
+    metricSavingsPct.textContent = `Up to ${pct}% bill reduction`;
   }
 
   function renderApplianceTable() {
@@ -321,41 +324,50 @@ document.addEventListener('DOMContentLoaded', () => {
       : state.appliances.filter(a => a.room === state.filterRoom);
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 24px;">No appliances found in this room category.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding:24px;">No devices found in this room category.</td></tr>`;
       return;
     }
 
-    filtered.forEach((app, index) => {
-      const monthlyKwh = calculateApplianceMonthlyKwh(app);
-      // Rough cost proportional to share of total kWh
-      const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
-      const totalCost = calculateTariffCost(totalKwh);
-      const appCost = totalKwh > 0 ? (monthlyKwh / totalKwh) * totalCost : 0;
+    const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
+    const totalCost = calculateTariffCost(totalKwh);
 
-      const roomInfo = ROOM_CATEGORIES[app.room] || { name: app.room, color: '#9ca3af' };
+    filtered.forEach((app, index) => {
+      // Find actual index in state.appliances array
+      const realIndex = state.appliances.findIndex(a => a.id === app.id);
+      const activeIdx = realIndex !== -1 ? realIndex : index;
+
+      const monthlyKwh = calculateApplianceMonthlyKwh(app);
+      const appCost = totalKwh > 0 ? (monthlyKwh / totalKwh) * totalCost : 0;
       const symbol = state.currency.symbol;
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
-          <div style="font-weight:600;">${app.name}</div>
-          <small style="color:var(--text-muted); font-size:0.75rem;">${app.tip || ''}</small>
+          <input type="text" value="${app.name}" data-index="${activeIdx}" data-field="name" style="width:100%; font-weight:600;" placeholder="Appliance Name">
         </td>
         <td>
-          <span class="room-badge" style="border-left: 3px solid ${roomInfo.color};">
-            ${roomInfo.name}
-          </span>
+          <select data-index="${activeIdx}" data-field="room" style="width:100%; font-size:0.85rem;">
+            ${Object.keys(ROOM_CATEGORIES).map(rKey => `
+              <option value="${rKey}" ${app.room === rKey ? 'selected' : ''}>${ROOM_CATEGORIES[rKey].name}</option>
+            `).join('')}
+          </select>
         </td>
         <td>
-          <input type="number" value="${app.watts}" min="1" max="10000" style="width:75px;" data-index="${index}" data-field="watts"> W
+          <input type="number" value="${app.watts}" min="1" max="10000" style="width:75px;" data-index="${activeIdx}" data-field="watts"> W
         </td>
         <td>
-          <input type="number" value="${app.hoursPerDay}" min="0.1" max="24" step="0.1" style="width:65px;" data-index="${index}" data-field="hoursPerDay"> hrs/d
+          <input type="number" value="${app.hoursPerDay}" min="0.1" max="24" step="0.1" style="width:65px;" data-index="${activeIdx}" data-field="hoursPerDay"> h
+        </td>
+        <td>
+          <input type="number" value="${app.daysPerWeek !== undefined ? app.daysPerWeek : 7}" min="1" max="7" style="width:55px;" data-index="${activeIdx}" data-field="daysPerWeek"> d
+        </td>
+        <td>
+          <input type="number" value="${app.quantity || 1}" min="1" max="50" style="width:55px;" data-index="${activeIdx}" data-field="quantity">
         </td>
         <td><strong>${monthlyKwh.toFixed(1)}</strong> kWh</td>
-        <td style="color:var(--primary); font-weight:600;">${symbol}${appCost.toFixed(2)}</td>
+        <td style="color:var(--primary-emerald); font-weight:600;">${symbol}${appCost.toFixed(2)}</td>
         <td>
-          <button class="action-btn-icon btn-delete" data-index="${index}" title="Remove Appliance">
+          <button class="icon-btn btn-delete" data-index="${activeIdx}" title="Delete Appliance">
             <i data-lucide="trash-2"></i>
           </button>
         </td>
@@ -366,112 +378,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // Table input update listeners
-    tbody.querySelectorAll('input').forEach(input => {
-      input.addEventListener('change', (e) => {
+    // Attach listeners for live inline row edits (Name, Room, Watts, Hours, Days, Quantity)
+    tbody.querySelectorAll('input, select').forEach(element => {
+      const handleEdit = (e) => {
         const idx = parseInt(e.target.getAttribute('data-index'));
         const field = e.target.getAttribute('data-field');
-        const val = parseFloat(e.target.value);
-        if (!isNaN(val) && state.appliances[idx]) {
-          state.appliances[idx][field] = val;
-          recalculateAndRender();
+        if (isNaN(idx) || !state.appliances[idx]) return;
+
+        let val = e.target.value;
+        if (field === 'watts' || field === 'hoursPerDay' || field === 'daysPerWeek' || field === 'quantity') {
+          val = parseFloat(val);
+          if (isNaN(val)) return;
         }
-      });
+
+        state.appliances[idx][field] = val;
+        homePreset.value = 'custom';
+        
+        // Update calculations live
+        updateMetrics();
+        renderEnergyTips();
+        updateSimulatorResults();
+        saveStateToLocalStorage();
+
+        // Update the monthly kWh and cost cell for this specific row without re-rendering inputs (prevents focus loss)
+        const row = e.target.closest('tr');
+        if (row) {
+          const app = state.appliances[idx];
+          const mKwh = calculateApplianceMonthlyKwh(app);
+          const tKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
+          const tCost = calculateTariffCost(tKwh);
+          const aCost = tKwh > 0 ? (mKwh / tKwh) * tCost : 0;
+          const symbol = state.currency.symbol;
+
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 8) {
+            cells[6].innerHTML = `<strong>${mKwh.toFixed(1)}</strong> kWh`;
+            cells[7].innerHTML = `${symbol}${aCost.toFixed(2)}`;
+          }
+        }
+      };
+
+      element.addEventListener('input', handleEdit);
+      element.addEventListener('change', handleEdit);
     });
 
-    // Delete buttons
+    // Delete button listeners
     tbody.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-index'));
-        const removed = state.appliances.splice(idx, 1);
-        if (removed.length) showToast(`Removed "${removed[0].name}"`);
-        presetSelect.value = 'custom';
-        recalculateAndRender();
+        if (!isNaN(idx) && state.appliances[idx]) {
+          const removed = state.appliances.splice(idx, 1);
+          if (removed.length) showToast(`Removed "${removed[0].name}"`);
+          homePreset.value = 'custom';
+          recalculateAll();
+        }
       });
     });
   }
 
   // Energy Saving Advice Engine
-  function generateEnergySavingTips() {
+  function generateTips() {
     const tips = [];
     const symbol = state.currency.symbol;
-
-    // Check HVAC consumption
-    const hvacApps = state.appliances.filter(a => a.room === 'hvac');
-    const hvacKwh = hvacApps.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
     const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
+    const totalCost = calculateTariffCost(totalKwh);
 
-    if (hvacKwh / (totalKwh || 1) > 0.3) {
-      const savAmount = calculateTariffCost(totalKwh) * 0.15;
+    // HVAC check
+    const hvacKwh = state.appliances.filter(a => a.room === 'hvac').reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
+    if (hvacKwh / (totalKwh || 1) > 0.25) {
       tips.push({
-        title: 'Optimize HVAC Thermostat & Airflow',
-        desc: 'Heating and cooling account for over 30% of your total energy bill. Raising your AC temperature by 2°C or setting fan speed to Auto reduces HVAC load significantly.',
-        savings: `${symbol}${savAmount.toFixed(2)} / month`,
-        level: 'high',
+        title: 'Optimize Air Conditioning Thermostat',
+        desc: 'Cooling/heating accounts for over 25% of your bill. Raising thermostat settings by 2°C saves up to 15% on HVAC energy.',
+        savings: `${symbol}${(totalCost * 0.15).toFixed(2)} / month`,
         icon: 'thermometer-sun'
       });
     }
 
-    // Check Water Heater
-    const waterHeater = state.appliances.find(a => a.name.toLowerCase().includes('water') || a.name.toLowerCase().includes('geyser'));
-    if (waterHeater && waterHeater.hoursPerDay > 1) {
-      const whKwh = calculateApplianceMonthlyKwh(waterHeater);
-      const savAmount = (whKwh * 0.25) * (state.flatRate || 0.16);
+    // Water heater check
+    const geyser = state.appliances.find(a => a.name.toLowerCase().includes('geyser') || a.name.toLowerCase().includes('water'));
+    if (geyser && geyser.hoursPerDay >= 1.5) {
       tips.push({
-        title: 'Install Smart Water Heater Timer Switch',
-        desc: `Your ${waterHeater.name} runs for ${waterHeater.hoursPerDay} hours daily. Connecting an automated timer to heat water only prior to usage prevents costly standby tank heat loss.`,
-        savings: `${symbol}${savAmount.toFixed(2)} / month`,
-        level: 'medium',
+        title: 'Install Digital Water Heater Timer',
+        desc: 'Geysers draw heavy power. A digital timer prevents continuous reheating standby loss when not taking showers.',
+        savings: `${symbol}${(calculateApplianceMonthlyKwh(geyser) * 0.3 * (state.flatRate || 0.16)).toFixed(2)} / month`,
         icon: 'clock'
       });
     }
 
-    // Check Lighting
-    const lightingApps = state.appliances.filter(a => a.room === 'lighting' || a.name.toLowerCase().includes('bulb') || a.name.toLowerCase().includes('light'));
-    const incandescent = lightingApps.find(a => a.watts >= 60 && !a.name.toLowerCase().includes('led'));
-    if (incandescent) {
+    // Standby power draw check
+    const entCount = state.appliances.filter(a => a.room === 'entertainment').length;
+    if (entCount > 0) {
       tips.push({
-        title: 'Upgrade High-Wattage Lighting to LED',
-        desc: 'Replacing standard incandescent bulbs with modern LED equivalents cuts lighting energy usage by up to 85% while lasting 10x longer.',
-        savings: `${symbol}${(calculateApplianceMonthlyKwh(incandescent) * 0.8 * state.flatRate).toFixed(2)} / month`,
-        level: 'high',
-        icon: 'lightbulb'
-      });
-    }
-
-    // Peak Load Shifting (TOU)
-    if (state.tariffMode === 'tou' && state.touRates.peakShare > 25) {
-      const peakKwh = totalKwh * (state.touRates.peakShare / 100);
-      const shiftSavings = (peakKwh * 0.4) * (state.touRates.peak - state.touRates.offPeak);
-      tips.push({
-        title: 'Shift Heavy Appliance Runs to Off-Peak Hours',
-        desc: 'Run your washing machine, dishwasher, and EV charger during off-peak windows to take advantage of lower utility rates.',
-        savings: `${symbol}${shiftSavings.toFixed(2)} / month`,
-        level: 'high',
-        icon: 'zap'
-      });
-    }
-
-    // Standby Power Draw
-    const electronics = state.appliances.filter(a => a.room === 'entertainment');
-    if (electronics.length > 0) {
-      tips.push({
-        title: 'Eliminate Phantom Standby Loads',
-        desc: 'TVs, gaming consoles, and desktop PCs continue drawing 5–10W in standby mode. Connect them to smart power strips that shut off power when not in use.',
-        savings: `${symbol}${(15 * state.flatRate).toFixed(2)} / month`,
-        level: 'medium',
+        title: 'Eliminate Phantom Standby Power Draw',
+        desc: 'TVs, gaming rigs, and set-top boxes consume 5–10W constantly while in standby. Use smart power strips to auto-shutoff.',
+        savings: `${symbol}${(12 * (state.flatRate || 0.16)).toFixed(2)} / month`,
         icon: 'power'
       });
     }
 
-    // Always include a baseline tip if few appliances
-    if (tips.length < 3) {
+    // Lighting check
+    const halogen = state.appliances.find(a => a.room === 'lighting' && a.watts > 40);
+    if (halogen) {
       tips.push({
-        title: 'Clean Appliance Condenser Coils & Air Filters',
-        desc: 'Clogged AC filters and dirty refrigerator coils force compressors to run 15% longer. Routine maintenance improves airflow and system longevity.',
-        savings: `${symbol}${(totalKwh * 0.05 * state.flatRate).toFixed(2)} / month`,
-        level: 'medium',
-        icon: 'shield-check'
+        title: 'Replace Legacy Bulbs with LEDs',
+        desc: 'High-wattage lighting drains unnecessary electricity. Switching to 9W LEDs cuts lighting power usage by 80%.',
+        savings: `${symbol}${(calculateApplianceMonthlyKwh(halogen) * 0.75 * state.flatRate).toFixed(2)} / month`,
+        icon: 'lightbulb'
       });
     }
 
@@ -479,80 +491,74 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderEnergyTips() {
-    const container = document.getElementById('tipsListContainer');
+    const container = document.getElementById('tipsGridContainer');
     container.innerHTML = '';
-    const tips = generateEnergySavingTips();
+    const tips = generateTips();
 
     tips.forEach(t => {
-      const card = document.createElement('div');
-      card.className = `tip-card ${t.level}`;
-      card.innerHTML = `
+      const box = document.createElement('div');
+      box.className = 'tip-box';
+      box.innerHTML = `
         <div>
-          <div class="tip-header">
-            <div class="tip-icon">
+          <div class="tip-top">
+            <div class="tip-avatar">
               <i data-lucide="${t.icon}"></i>
             </div>
             <div>
-              <div class="tip-title">${t.title}</div>
-              <span class="badge ${t.level === 'high' ? 'badge-warning' : 'badge-info'}">
-                ${t.level.toUpperCase()} IMPACT
-              </span>
+              <div class="tip-title-text">${t.title}</div>
+              <span class="chip chip-amber">HIGH ROI</span>
             </div>
           </div>
-          <div class="tip-desc">${t.desc}</div>
+          <div class="tip-body">${t.desc}</div>
         </div>
-        <div class="tip-footer">
+        <div class="tip-bottom">
           <span>Est. Savings:</span>
-          <span class="est-savings">${t.savings}</span>
+          <span class="savings-highlight">${t.savings}</span>
         </div>
       `;
-      container.appendChild(card);
+      container.appendChild(box);
     });
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  function calculateTotalPotentialSavings(totalKwh, monthlyCost) {
-    const tips = generateEnergySavingTips();
-    let totalMonthlySavings = 0;
+  function calculatePotentialSavings(totalKwh, totalCost) {
+    const tips = generateTips();
+    let sum = 0;
     tips.forEach(t => {
-      const match = t.savings.match(/[\d.]+/);
-      if (match) totalMonthlySavings += parseFloat(match[0]);
+      const m = t.savings.match(/[\d.]+/);
+      if (m) sum += parseFloat(m[0]);
     });
-    return { monthly: Math.min(totalMonthlySavings, monthlyCost * 0.4) };
+    return { monthly: Math.min(sum, totalCost * 0.35) };
   }
 
-  // Interactive What-If Simulator Logic
+  // Interactive Simulator Logic
   function updateSimulatorResults() {
     const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
     const baseBill = calculateTariffCost(totalKwh);
 
-    // Apply simulation factors
-    // 1. Thermostat shift: -7% HVAC energy per 1 degree
+    // 1. Thermostat savings
     const hvacKwh = state.appliances.filter(a => a.room === 'hvac').reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
-    const hvacSavingsKwh = hvacKwh * (state.simTemp * 0.07);
+    const hvacSaved = hvacKwh * (state.simTemp * 0.07);
 
-    // 2. Solar offset: 120 kWh per 1 kW system
-    const solarGenKwh = state.simSolar * 120;
+    // 2. Solar PV generation offset (~120 kWh / month per 1 kW)
+    const solarOffset = state.simSolar * 120;
 
-    // 3. LED shift: 50% lighting reduction at 100% conversion
-    const lightingKwh = state.appliances.filter(a => a.room === 'lighting').reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
-    const ledSavingsKwh = lightingKwh * (state.simLed / 100) * 0.5;
+    // 3. LED conversion savings
+    const lightKwh = state.appliances.filter(a => a.room === 'lighting').reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
+    const ledSaved = lightKwh * (state.simLed / 100) * 0.5;
 
-    // Net optimized kWh
-    const simNetKwh = Math.max(0, totalKwh - hvacSavingsKwh - solarGenKwh - ledSavingsKwh);
-    
-    // 4. If TOU shift applied: adjust TOU peak ratio
+    const netKwh = Math.max(0, totalKwh - hvacSaved - solarOffset - ledSaved);
     let simBill = 0;
+
     if (state.tariffMode === 'tou' && state.simShift > 0) {
-      const originalPeakShare = state.touRates.peakShare;
-      const shiftedPeakShare = Math.max(10, originalPeakShare - (state.simShift * 0.25));
-      const peakKwh = simNetKwh * (shiftedPeakShare / 100);
-      const offPeakKwh = simNetKwh - peakKwh;
+      const shiftPeak = Math.max(10, state.touRates.peakShare - (state.simShift * 0.25));
+      const peakKwh = netKwh * (shiftPeak / 100);
+      const offPeakKwh = netKwh - peakKwh;
       const energyCharge = (peakKwh * state.touRates.peak) + (offPeakKwh * state.touRates.offPeak);
       simBill = (energyCharge + state.fixedFee) * (1 + (state.taxPct / 100));
     } else {
-      simBill = calculateTariffCost(simNetKwh);
+      simBill = calculateTariffCost(netKwh);
     }
 
     const netSavings = Math.max(0, baseBill - simBill);
@@ -563,69 +569,58 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('simNetSavings').textContent = `${symbol}${netSavings.toFixed(2)}/mo`;
   }
 
-  // Render Chart.js Donut & Bar Charts
+  // Chart Rendering
   function renderCharts() {
     if (typeof Chart === 'undefined') return;
 
-    // 1. Room Donut Chart
-    const roomTotals = {};
-    Object.keys(ROOM_CATEGORIES).forEach(r => roomTotals[r] = 0);
+    // Room Donut Chart
+    const roomSums = {};
+    Object.keys(ROOM_CATEGORIES).forEach(r => roomSums[r] = 0);
 
     state.appliances.forEach(app => {
       const kwh = calculateApplianceMonthlyKwh(app);
-      if (roomTotals[app.room] !== undefined) {
-        roomTotals[app.room] += kwh;
-      } else {
-        roomTotals[app.room] = kwh;
-      }
+      if (roomSums[app.room] !== undefined) roomSums[app.room] += kwh;
+      else roomSums[app.room] = kwh;
     });
 
-    const roomLabels = Object.keys(roomTotals).map(r => ROOM_CATEGORIES[r] ? ROOM_CATEGORIES[r].name : r);
-    const roomData = Object.values(roomTotals);
-    const roomColors = Object.keys(roomTotals).map(r => ROOM_CATEGORIES[r] ? ROOM_CATEGORIES[r].color : '#9ca3af');
+    const labels = Object.keys(roomSums).map(r => ROOM_CATEGORIES[r] ? ROOM_CATEGORIES[r].name : r);
+    const dataVals = Object.values(roomSums);
+    const colors = Object.keys(roomSums).map(r => ROOM_CATEGORIES[r] ? ROOM_CATEGORIES[r].color : '#94a3b8');
 
-    const ctxRoom = document.getElementById('roomDonutChart');
+    const ctxRoom = document.getElementById('roomChartCanvas');
     if (ctxRoom) {
       if (roomChart) roomChart.destroy();
       roomChart = new Chart(ctxRoom, {
         type: 'doughnut',
         data: {
-          labels: roomLabels,
-          datasets: [{
-            data: roomData,
-            backgroundColor: roomColors,
-            borderColor: '#151c2e',
-            borderWidth: 2
-          }]
+          labels,
+          datasets: [{ data: dataVals, backgroundColor: colors, borderColor: '#131929', borderWidth: 2 }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } }
-          }
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } } }
         }
       });
     }
 
-    // 2. Top Appliances Bar Chart
+    // Top Appliances Bar Chart
     const sortedApps = [...state.appliances].sort((a, b) => calculateApplianceMonthlyKwh(b) - calculateApplianceMonthlyKwh(a)).slice(0, 5);
     const barLabels = sortedApps.map(a => a.name);
     const barData = sortedApps.map(a => calculateApplianceMonthlyKwh(a).toFixed(1));
 
-    const ctxTop = document.getElementById('topAppliancesBarChart');
+    const ctxTop = document.getElementById('topChartCanvas');
     if (ctxTop) {
-      if (topApplianceChart) topApplianceChart.destroy();
-      topApplianceChart = new Chart(ctxTop, {
+      if (topChart) topChart.destroy();
+      topChart = new Chart(ctxTop, {
         type: 'bar',
         data: {
           labels: barLabels,
           datasets: [{
             label: 'Monthly kWh',
             data: barData,
-            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+            backgroundColor: 'rgba(16, 185, 129, 0.75)',
             borderColor: '#10b981',
-            borderWidth: 1,
             borderRadius: 6
           }]
         },
@@ -633,20 +628,18 @@ document.addEventListener('DOMContentLoaded', () => {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { ticks: { color: '#9ca3af', font: { family: 'Inter', size: 10 } }, grid: { display: false } },
-            y: { ticks: { color: '#9ca3af', font: { family: 'Inter', size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            x: { ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
           },
-          plugins: {
-            legend: { display: false }
-          }
+          plugins: { legend: { display: false } }
         }
       });
     }
   }
 
-  // Export Data to CSV
+  // Export CSV
   function exportToCsv() {
-    let csv = 'Appliance,Room Category,Watts,Hours Per Day,Days Per Week,Monthly kWh,Estimated Monthly Cost\n';
+    let csv = 'Appliance,Room Category,Watts,Hours Per Day,Days Per Week,Quantity,Monthly kWh,Monthly Cost\n';
     const totalKwh = state.appliances.reduce((acc, a) => acc + calculateApplianceMonthlyKwh(a), 0);
     const totalCost = calculateTariffCost(totalKwh);
 
@@ -654,28 +647,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const kwh = calculateApplianceMonthlyKwh(app);
       const cost = totalKwh > 0 ? (kwh / totalKwh) * totalCost : 0;
       const roomName = ROOM_CATEGORIES[app.room] ? ROOM_CATEGORIES[app.room].name : app.room;
-      csv += `"${app.name}","${roomName}",${app.watts},${app.hoursPerDay},${app.daysPerWeek},${kwh.toFixed(2)},${cost.toFixed(2)}\n`;
+      csv += `"${app.name}","${roomName}",${app.watts},${app.hoursPerDay},${app.daysPerWeek || 7},${app.quantity || 1},${kwh.toFixed(2)},${cost.toFixed(2)}\n`;
     });
 
-    csv += `\nTotal Monthly Consumption (kWh),,,,,,${totalKwh.toFixed(2)}\n`;
-    csv += `Total Monthly Estimated Bill (${state.currency.code}),,,,,,${totalCost.toFixed(2)}\n`;
+    csv += `\nTotal Monthly Consumption (kWh),,,,,,,${totalKwh.toFixed(2)}\n`;
+    csv += `Total Monthly Cost (${state.currency.code}),,,,,,,${totalCost.toFixed(2)}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Household_Energy_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.href = url;
+    link.download = `Household_Energy_Report_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    showToast('Report exported as CSV.');
+    showToast('Report exported as CSV');
   }
 
-  // LocalStorage Helper
+  // LocalStorage state management
   function saveStateToLocalStorage() {
     try {
-      localStorage.setItem('energy_calc_state', JSON.stringify({
+      localStorage.setItem('hec_state_v2', JSON.stringify({
         appliances: state.appliances,
         currencyCode: state.currency.code,
         tariffMode: state.tariffMode,
@@ -685,19 +678,17 @@ document.addEventListener('DOMContentLoaded', () => {
         fixedFee: state.fixedFee,
         taxPct: state.taxPct
       }));
-    } catch (e) {
-      // LocalStorage unavailable
-    }
+    } catch (e) {}
   }
 
-  function loadStateFromLocalStorage() {
+  function loadLocalStorageState() {
     try {
-      const data = localStorage.getItem('energy_calc_state');
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed.appliances && Array.isArray(parsed.appliances)) state.appliances = parsed.appliances;
-        if (parsed.currencyCode && CURRENCIES[parsed.currencyCode]) {
-          state.currency = CURRENCIES[parsed.currencyCode];
+      const raw = localStorage.getItem('hec_state_v2');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.appliances) state.appliances = parsed.appliances;
+        if (parsed.currencyCode && CURRENCY_DATABASE[parsed.currencyCode]) {
+          state.currency = CURRENCY_DATABASE[parsed.currencyCode];
           currencySelect.value = parsed.currencyCode;
         }
         if (parsed.tariffMode) state.tariffMode = parsed.tariffMode;
@@ -707,26 +698,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (parsed.fixedFee !== undefined) state.fixedFee = parsed.fixedFee;
         if (parsed.taxPct !== undefined) state.taxPct = parsed.taxPct;
       }
-    } catch (e) {
-      // Error loading local storage
-    }
+    } catch (e) {}
   }
 
-  // Toast System
   function showToast(msg) {
-    const container = document.getElementById('toastContainer');
+    const stack = document.getElementById('toastStack');
     const toast = document.createElement('div');
-    toast.className = 'toast';
+    toast.className = 'toast-msg';
     toast.textContent = msg;
-    container.appendChild(toast);
+    stack.appendChild(toast);
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
       setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 2800);
   }
 
-  // Initial Calculation Run
+  // Initialize
   updateCurrencySymbols();
-  recalculateAndRender();
+  recalculateAll();
 });
