@@ -11,10 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Lucide Icons -->
+  <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- Chart.js -->
+
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="stylesheet" href="styles.css">
@@ -22,40 +22,40 @@
 <body>
 
   <div class="container">
-    <!-- Header -->
+    <!-- Top Header -->
     <header class="app-header">
-      <div class="logo-group">
-        <div class="logo-icon">
+      <div class="brand-box">
+        <div class="brand-logo">
           <i data-lucide="zap"></i>
         </div>
-        <div class="logo-text">
+        <div class="brand-title">
           <h1>Household Energy Calculator</h1>
-          <p>Estimate Electricity Costs & Optimize Consumption Patterns</p>
+          <p>Smart Electricity Cost Estimation & Consumption Optimizer</p>
         </div>
       </div>
 
-      <div class="header-controls">
-        <div class="control-item">
+      <div class="header-actions">
+        <div class="select-group">
           <i data-lucide="home"></i>
-          <label for="presetSelect">Preset Profile:</label>
-          <select id="presetSelect">
+          <label for="homePreset">Home Profile:</label>
+          <select id="homePreset">
             <option value="custom">Custom Configuration</option>
-            <option value="apartment_1bed">1-Bed Apartment</option>
-            <option value="family_house">3-Bed Family House</option>
+            <option value="studio_apt">1-Bed Apartment</option>
+            <option value="family_home">3-Bed Family House</option>
             <option value="eco_smart">Eco-Smart Home</option>
           </select>
         </div>
 
-        <div class="control-item">
+        <div class="select-group">
           <i data-lucide="coins"></i>
           <label for="currencySelect">Currency:</label>
           <select id="currencySelect">
-            <option value="USD">$ USD (US)</option>
-            <option value="EUR">€ EUR (EU)</option>
-            <option value="GBP">£ GBP (UK)</option>
-            <option value="INR">₹ INR (India)</option>
-            <option value="CAD">CA$ CAD (Canada)</option>
-            <option value="AUD">A$ AUD (Australia)</option>
+            <option value="USD">🇺🇸 $ USD</option>
+            <option value="EUR">🇪🇺 € EUR</option>
+            <option value="GBP">🇬🇧 £ GBP</option>
+            <option value="INR">🇮🇳 ₹ INR</option>
+            <option value="CAD">🇨🇦 CA$ CAD</option>
+            <option value="AUD">🇦🇺 A$ AUD</option>
           </select>
         </div>
 
@@ -63,80 +63,82 @@
           <i data-lucide="download"></i> Export CSV
         </button>
 
-        <button id="btnReset" class="btn btn-outline-danger">
+        <button id="btnReset" class="btn btn-danger">
           <i data-lucide="rotate-ccw"></i> Reset
         </button>
       </div>
     </header>
 
     <!-- Key Metrics Cards -->
-    <section class="metrics-grid">
-      <div class="metric-card cost">
-        <div class="metric-label">
+    <div class="metrics-row">
+      <div class="metric-box cost">
+        <div class="metric-title">
           <span>Estimated Monthly Bill</span>
-          <span class="badge badge-success" id="badgeBillPeriod">Monthly</span>
+          <span class="chip chip-green" id="badgeBillPeriod">Monthly</span>
         </div>
-        <div class="metric-value" id="metricCost">$0.00</div>
-        <div class="metric-sub" id="metricDailyCost">Daily Avg: $0.00</div>
+        <div class="metric-val" id="metricCost">$0.00</div>
+        <div class="metric-subtitle" id="metricDailyCost">Daily Average: $0.00</div>
       </div>
 
-      <div class="metric-card kwh">
-        <div class="metric-label">
+      <div class="metric-box kwh">
+        <div class="metric-title">
           <span>Monthly Consumption</span>
           <i data-lucide="activity" style="width:16px; height:16px; color: var(--accent-cyan);"></i>
         </div>
-        <div class="metric-value" id="metricKwh">0 kWh</div>
-        <div class="metric-sub" id="metricDailyKwh">Daily Avg: 0.0 kWh</div>
+        <div class="metric-val" id="metricKwh">0 kWh</div>
+        <div class="metric-subtitle" id="metricDailyKwh">Daily Average: 0.0 kWh</div>
       </div>
 
-      <div class="metric-card carbon">
-        <div class="metric-label">
+      <div class="metric-box co2">
+        <div class="metric-title">
           <span>Carbon Footprint</span>
           <i data-lucide="leaf" style="width:16px; height:16px; color: var(--accent-purple);"></i>
         </div>
-        <div class="metric-value" id="metricCo2">0 kg CO₂</div>
-        <div class="metric-sub" id="metricTrees">≈ 0 trees needed to offset</div>
+        <div class="metric-val" id="metricCo2">0 kg CO₂</div>
+        <div class="metric-subtitle" id="metricTrees">≈ 0 trees offset/yr</div>
       </div>
 
-      <div class="metric-card savings">
-        <div class="metric-label">
-          <span>Savings Potential</span>
-          <span class="badge badge-warning">Optimizable</span>
+      <div class="metric-box savings">
+        <div class="metric-title">
+          <span>Potential Monthly Savings</span>
+          <span class="chip chip-amber">Optimizable</span>
         </div>
-        <div class="metric-value" id="metricSavings">$0.00 / mo</div>
-        <div class="metric-sub" id="metricSavingsPct">Up to 0% bill reduction</div>
+        <div class="metric-val" id="metricSavings">$0.00</div>
+        <div class="metric-subtitle" id="metricSavingsPct">Up to 0% bill reduction</div>
       </div>
-    </section>
+    </div>
 
     <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-      <button class="tab-btn active" data-tab="tab-appliances">
+    <div class="tabs-header">
+      <button class="tab-link active" data-tab="tab-appliances">
         <i data-lucide="layout-grid"></i> Appliances & Devices
       </button>
-      <button class="tab-btn" data-tab="tab-tariffs">
+      <button class="tab-link" data-tab="tab-tariffs">
         <i data-lucide="sliders"></i> Tariff & Utility Rates
       </button>
-      <button class="tab-btn" data-tab="tab-tips">
+      <button class="tab-link" data-tab="tab-tips">
         <i data-lucide="sparkles"></i> Energy Saving Tips
       </button>
-      <button class="tab-btn" data-tab="tab-simulator">
+      <button class="tab-link" data-tab="tab-simulator">
         <i data-lucide="wand-2"></i> What-If Simulator
       </button>
-      <button class="tab-btn" data-tab="tab-analytics">
+      <button class="tab-link" data-tab="tab-analytics">
         <i data-lucide="pie-chart"></i> Charts & Analytics
       </button>
-    </nav>
+    </div>
 
-    <!-- Tab 1: Appliances & Devices -->
-    <div id="tab-appliances" class="tab-panel active">
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Add Custom Appliance</span>
-          <small>Enter appliance power rating and daily usage hours</small>
+    <!-- TAB 1: Appliances & Devices -->
+    <div id="tab-appliances" class="tab-content active">
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Add Custom Appliance</h2>
+            <p>Enter appliance name, category, power rating (W), daily hours, and days per week</p>
+          </div>
         </div>
 
-        <form id="addApplianceForm" class="add-appliance-bar">
-          <input type="text" id="newAppName" placeholder="Appliance Name (e.g., Air Purifier)" required>
+        <form id="addApplianceForm" class="add-bar">
+          <input type="text" id="newAppName" placeholder="Appliance Name (e.g. Air Purifier)" required>
           
           <select id="newAppRoom">
             <option value="hvac">Heating & Cooling</option>
@@ -144,12 +146,13 @@
             <option value="laundry">Laundry & Cleaning</option>
             <option value="lighting">Lighting & Water</option>
             <option value="entertainment">Electronics & Work</option>
-            <option value="garage">EV & Heavy Loads</option>
+            <option value="heavy">EV & Heavy Duty</option>
           </select>
 
           <input type="number" id="newAppWatts" placeholder="Watts (W)" min="1" max="10000" step="1" required>
           <input type="number" id="newAppHours" placeholder="Hours/Day" min="0.1" max="24" step="0.1" required>
           <input type="number" id="newAppDays" placeholder="Days/Wk" min="1" max="7" value="7" required>
+          <input type="number" id="newAppQty" placeholder="Qty" min="1" max="50" value="1" required>
 
           <button type="submit" class="btn btn-primary">
             <i data-lucide="plus"></i> Add
@@ -157,274 +160,244 @@
         </form>
       </div>
 
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Household Appliances List</span>
-          <div style="display: flex; gap: 8px;">
-            <select id="filterRoomSelect" style="font-size:0.82rem;">
-              <option value="all">All Rooms</option>
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Household Appliances List (Fully Editable)</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted);">You can directly edit any Appliance Name, Category, Watts, Hours/Day, Days/Wk, or Qty in the table below!</p>
+          </div>
+          <div>
+            <select id="filterRoom" style="font-size:0.85rem;">
+              <option value="all">All Room Categories</option>
               <option value="hvac">Heating & Cooling</option>
               <option value="kitchen">Kitchen & Cooking</option>
               <option value="laundry">Laundry & Cleaning</option>
               <option value="lighting">Lighting & Water</option>
               <option value="entertainment">Electronics & Work</option>
-              <option value="garage">EV & Heavy Loads</option>
+              <option value="heavy">EV & Heavy Duty</option>
             </select>
           </div>
         </div>
 
-        <div class="appliances-table-wrapper">
-          <table class="appliance-table">
+        <div class="table-responsive">
+          <table class="data-table">
             <thead>
               <tr>
-                <th>Appliance</th>
-                <th>Category</th>
-                <th>Power Rating</th>
-                <th>Usage / Day</th>
+                <th style="min-width:180px;">Appliance Name</th>
+                <th style="min-width:150px;">Category</th>
+                <th>Watts (W)</th>
+                <th>Hours / Day</th>
+                <th>Days / Wk</th>
+                <th>Qty</th>
                 <th>Monthly kWh</th>
                 <th>Monthly Cost</th>
-                <th>Actions</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="applianceTableBody">
-              <!-- Rendered dynamically -->
+              <!-- Fully Editable Rows Rendered via JavaScript -->
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Tab 2: Tariff & Utility Rates -->
-    <div id="tab-tariffs" class="tab-panel">
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Electricity Tariff Structure</span>
-          <small>Configure how your utility charges per kWh</small>
-        </div>
-
-        <div class="tariff-options-grid">
-          <div class="tariff-mode-card selected" data-mode="flat">
-            <h4>Flat Rate Tariff</h4>
-            <p>Single fixed price per kWh for all consumption throughout the month.</p>
-          </div>
-
-          <div class="tariff-mode-card" data-mode="tiered">
-            <h4>Tiered / Block Tariff</h4>
-            <p>Rates increase in tiers as consumption exceeds block thresholds.</p>
-          </div>
-
-          <div class="tariff-mode-card" data-mode="tou">
-            <h4>Time-of-Use (TOU)</h4>
-            <p>Different rates for Peak energy demand hours vs Off-Peak hours.</p>
+    <!-- TAB 2: Tariff & Utility Rates -->
+    <div id="tab-tariffs" class="tab-content">
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Electricity Tariff & Rate Calculator Settings</h2>
+            <p>Select how your electricity provider charges per kilowatt-hour (kWh)</p>
           </div>
         </div>
 
-        <!-- Tariff Details Config -->
-        <div id="flatTariffConfig" class="simulator-box">
-          <div class="sim-control-group">
-            <label>Flat Energy Rate per kWh:</label>
-            <input type="number" id="inputFlatRate" step="0.01" value="0.16" style="width: 120px;">
-            <span class="currency-symbol">$</span> / kWh
+        <div class="tariff-grid">
+          <div class="tariff-card active" data-mode="flat">
+            <h3>Flat Rate</h3>
+            <p>Uniform fixed rate per kWh for all consumption throughout the billing cycle.</p>
+          </div>
+
+          <div class="tariff-card" data-mode="tiered">
+            <h3>Tiered / Block Rate</h3>
+            <p>Tiered block rates that increase as monthly kWh consumption crosses thresholds.</p>
+          </div>
+
+          <div class="tariff-card" data-mode="tou">
+            <h3>Time-of-Use (TOU)</h3>
+            <p>Variable rate depending on Peak energy demand hours vs Off-Peak hours.</p>
           </div>
         </div>
 
-        <div id="tieredTariffConfig" class="simulator-box" style="display: none;">
-          <h4>Tiered Pricing Blocks</h4>
-          <div class="tier-row">
-            <span>Tier 1 (0 to 150 kWh):</span>
+        <div id="flatConfig" class="config-box">
+          <label>Flat Rate per kWh:</label>
+          <input type="number" id="flatRateInput" value="0.16" step="0.01" style="width:110px;">
+          <span class="currency-symbol">$</span> / kWh
+        </div>
+
+        <div id="tieredConfig" class="config-box" style="display:none;">
+          <h4 style="margin-bottom:12px;">Tiered Pricing Blocks</h4>
+          <div style="margin-bottom:10px;">
+            <span>Block 1 (0 – 150 kWh):</span>
             <input type="number" id="tier1Rate" value="0.12" step="0.01" style="width:90px;"> <span class="currency-symbol">$</span>/kWh
           </div>
-          <div class="tier-row">
-            <span>Tier 2 (151 to 350 kWh):</span>
+          <div style="margin-bottom:10px;">
+            <span>Block 2 (151 – 350 kWh):</span>
             <input type="number" id="tier2Rate" value="0.18" step="0.01" style="width:90px;"> <span class="currency-symbol">$</span>/kWh
           </div>
-          <div class="tier-row">
-            <span>Tier 3 (Above 350 kWh):</span>
+          <div>
+            <span>Block 3 (350+ kWh):</span>
             <input type="number" id="tier3Rate" value="0.28" step="0.01" style="width:90px;"> <span class="currency-symbol">$</span>/kWh
           </div>
         </div>
 
-        <div id="touTariffConfig" class="simulator-box" style="display: none;">
-          <h4>Time-of-Use Rates & Peak Share</h4>
-          <div class="sim-control-group">
+        <div id="touConfig" class="config-box" style="display:none;">
+          <h4 style="margin-bottom:12px;">Time-of-Use Rates</h4>
+          <div style="margin-bottom:12px;">
             <label>Peak Hours Rate:</label>
-            <input type="number" id="touPeakRate" value="0.25" step="0.01" style="width: 100px;"> <span class="currency-symbol">$</span> / kWh
+            <input type="number" id="touPeakRate" value="0.25" step="0.01" style="width:100px;"> <span class="currency-symbol">$</span>/kWh
           </div>
-          <div class="sim-control-group">
-            <label>Off-Peak Hours Rate:</label>
-            <input type="number" id="touOffPeakRate" value="0.10" step="0.01" style="width: 100px;"> <span class="currency-symbol">$</span> / kWh
+          <div style="margin-bottom:16px;">
+            <label>Off-Peak Rate:</label>
+            <input type="number" id="touOffPeakRate" value="0.10" step="0.01" style="width:100px;"> <span class="currency-symbol">$</span>/kWh
           </div>
-          <div class="sim-control-group">
-            <div class="sim-control-header">
+          <div class="sim-group">
+            <div class="sim-label">
               <span>Estimated Peak Usage Share:</span>
               <span id="touPeakShareVal">35%</span>
             </div>
-            <input type="range" id="touPeakShare" min="0" max="100" value="35" class="sim-slider">
+            <input type="range" id="touPeakShare" min="0" max="100" value="35" class="range-slider">
           </div>
         </div>
 
-        <div class="simulator-box">
-          <h4>Utility Fees & Taxes</h4>
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div class="config-box">
+          <h4 style="margin-bottom:12px;">Base Fees & Taxes</h4>
+          <div style="display:flex; gap:24px; flex-wrap:wrap;">
             <div>
               <label>Fixed Monthly Base Charge:</label>
-              <input type="number" id="fixedMonthlyFee" value="12.00" step="0.50" style="width: 100px;"> <span class="currency-symbol">$</span>
+              <input type="number" id="fixedMonthlyFee" value="12.00" step="0.50" style="width:100px;"> <span class="currency-symbol">$</span>
             </div>
             <div>
-              <label>Electricity Tax / Surcharge (%):</label>
-              <input type="number" id="taxPercentage" value="5.0" step="0.1" style="width: 90px;"> %
+              <label>Utility Tax / Surcharge (%):</label>
+              <input type="number" id="taxPercentage" value="5.0" step="0.1" style="width:90px;"> %
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Tab 3: Energy Saving Tips -->
-    <div id="tab-tips" class="tab-panel">
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Personalized Energy Reduction Recommendations</span>
-          <small>Generated based on your household's active power appliances and usage patterns</small>
+    <!-- TAB 3: Energy Saving Tips -->
+    <div id="tab-tips" class="tab-content">
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Pattern-Based Energy Saving Recommendations</h2>
+            <p>Smart actionable recommendations tailored specifically to your active appliances and usage profiles</p>
+          </div>
         </div>
 
-        <div id="tipsListContainer" class="tips-container">
-          <!-- Dynamically populated tips -->
+        <div id="tipsGridContainer" class="tips-grid">
+          <!-- Dynamically populated tips cards -->
         </div>
       </div>
     </div>
 
-    <!-- Tab 4: What-If Simulator -->
-    <div id="tab-simulator" class="tab-panel">
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Interactive Savings & Efficiency Simulator</span>
-          <small>Adjust parameters to see instant impact on your monthly electric bill</small>
+    <!-- TAB 4: What-If Simulator -->
+    <div id="tab-simulator" class="tab-content">
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Interactive Efficiency Simulator</h2>
+            <p>Test eco-friendly adjustments to see immediate impact on your monthly bill</p>
+          </div>
         </div>
 
-        <div class="simulator-box">
-          <div class="sim-control-group">
-            <div class="sim-control-header">
-              <span>Thermostat Shift (Summer Cooling / Winter Heating):</span>
+        <div class="config-box">
+          <div class="sim-group">
+            <div class="sim-label">
+              <span>HVAC Thermostat Shift (+0°C to +4°C):</span>
               <span id="simTempVal">+0°C (Default)</span>
             </div>
-            <input type="range" id="simTempSlider" min="0" max="4" value="0" step="1" class="sim-slider">
-            <small style="color: var(--text-muted);">Each 1°C thermostat adjustment saves ~6-8% on HVAC energy.</small>
+            <input type="range" id="simTempSlider" min="0" max="4" value="0" step="1" class="range-slider">
+            <small style="color:var(--text-muted); margin-top:4px; display:block;">Each 1°C increase in cooling temperature saves ~6-8% on HVAC energy.</small>
           </div>
 
-          <div class="sim-control-group">
-            <div class="sim-control-header">
-              <span>Rooftop Solar PV Installation (kW System Offset):</span>
+          <div class="sim-group">
+            <div class="sim-label">
+              <span>Rooftop Solar PV Installation (kW System Capacity):</span>
               <span id="simSolarVal">0 kW (No Solar)</span>
             </div>
-            <input type="range" id="simSolarSlider" min="0" max="10" value="0" step="0.5" class="sim-slider">
-            <small style="color: var(--text-muted);">Generates ~120 kWh per month for each 1 kW installed capacity.</small>
+            <input type="range" id="simSolarSlider" min="0" max="10" value="0" step="0.5" class="range-slider">
+            <small style="color:var(--text-muted); margin-top:4px; display:block;">Generates ~120 kWh per month per 1 kW system size.</small>
           </div>
 
-          <div class="sim-control-group">
-            <div class="sim-control-header">
-              <span>Convert Remaining Incandescent/Halogen Lights to LED:</span>
+          <div class="sim-group">
+            <div class="sim-label">
+              <span>Convert Lighting to High-Efficiency LEDs:</span>
               <span id="simLedVal">0% Converted</span>
             </div>
-            <input type="range" id="simLedSlider" min="0" max="100" value="0" step="25" class="sim-slider">
+            <input type="range" id="simLedSlider" min="0" max="100" value="0" step="25" class="range-slider">
           </div>
 
-          <div class="sim-control-group">
-            <div class="sim-control-header">
-              <span>Shift Heavy Loads (Laundry/Dishwashing) to Off-Peak:</span>
+          <div class="sim-group">
+            <div class="sim-label">
+              <span>Shift Heavy Washing & EV Loads to Off-Peak Hours:</span>
               <span id="simShiftVal">0% Shifted</span>
             </div>
-            <input type="range" id="simShiftSlider" min="0" max="100" value="0" step="25" class="sim-slider">
+            <input type="range" id="simShiftSlider" min="0" max="100" value="0" step="25" class="range-slider">
           </div>
         </div>
 
-        <!-- Before vs After Comparison Card -->
-        <div class="sim-comparison-card">
+        <div class="sim-summary-box">
           <div>
             <div style="font-size:0.85rem; color:var(--text-muted);">Current Bill</div>
-            <div id="simCurrentBill" style="font-family:var(--font-heading); font-size:1.6rem; font-weight:700;">$0.00</div>
+            <div id="simCurrentBill" style="font-family:var(--font-display); font-size:1.75rem; font-weight:800;">$0.00</div>
           </div>
           <div>
             <div style="font-size:0.85rem; color:var(--text-muted);">Optimized Bill</div>
-            <div id="simOptimizedBill" style="font-family:var(--font-heading); font-size:1.6rem; font-weight:700; color:var(--primary);">$0.00</div>
+            <div id="simOptimizedBill" style="font-family:var(--font-display); font-size:1.75rem; font-weight:800; color:var(--primary-emerald);">$0.00</div>
           </div>
           <div>
             <div style="font-size:0.85rem; color:var(--text-muted);">Total Monthly Net Savings</div>
-            <div id="simNetSavings" style="font-family:var(--font-heading); font-size:1.6rem; font-weight:700; color:var(--accent-cyan);">$0.00</div>
+            <div id="simNetSavings" style="font-family:var(--font-display); font-size:1.75rem; font-weight:800; color:var(--accent-cyan);">$0.00</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Tab 5: Charts & Analytics -->
-    <div id="tab-analytics" class="tab-panel">
-      <div class="panel-card">
-        <div class="panel-title">
-          <span>Visual Energy Consumption Breakdown</span>
+    <!-- TAB 5: Charts & Analytics -->
+    <div id="tab-analytics" class="tab-content">
+      <div class="section-panel">
+        <div class="section-head">
+          <div>
+            <h2>Energy Analytics & Visualizations</h2>
+          </div>
         </div>
 
-        <div class="charts-grid">
-          <div class="chart-box">
-            <h4 style="margin-bottom:12px; font-size:0.95rem;">Consumption by Room Category</h4>
-            <canvas id="roomDonutChart"></canvas>
+        <div class="charts-wrapper">
+          <div class="chart-card">
+            <h4 style="margin-bottom:14px; font-size:0.95rem;">Consumption Breakdown by Room Category</h4>
+            <canvas id="roomChartCanvas"></canvas>
           </div>
 
-          <div class="chart-box">
-            <h4 style="margin-bottom:12px; font-size:0.95rem;">Top 5 Power Consuming Devices (kWh/mo)</h4>
-            <canvas id="topAppliancesBarChart"></canvas>
+          <div class="chart-card">
+            <h4 style="margin-bottom:14px; font-size:0.95rem;">Top 5 Energy Consuming Appliances (kWh/mo)</h4>
+            <canvas id="topChartCanvas"></canvas>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
-    <footer>
-      <p>Household Electricity Usage & Cost Calculator | Powered by Clean Energy Engine</p>
+    <footer class="app-footer">
+      <p>Household Electricity Usage & Cost Calculator | Energy Consumption Optimizer Engine</p>
     </footer>
   </div>
 
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="toast-container"></div>
+  <!-- Toast Stack Container -->
+  <div id="toastStack" class="toast-stack"></div>
 
   <script src="appliances.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
-
-
-const ROOM_CATEGORIES = {
-  hvac: { name: 'Heating & Cooling', icon: 'zap', color: '#ff5e57' },
-  kitchen: { name: 'Kitchen & Cooking', icon: 'utensils', color: '#ffdd59' },
-  laundry: { name: 'Laundry & Cleaning', icon: 'shirt', color: '#0fbcf9' },
-  lighting: { name: 'Lighting & Water', icon: 'lightbulb', color: '#4bcffa' },
-  entertainment: { name: 'Electronics & Work', icon: 'tv', color: '#575fcf' },
-  garage: { name: 'EV & Heavy Loads', icon: 'car', color: '#0be881' }
-};
-const DEFAULT_APPLIANCES = [
-  {
-    id: 'ac_split',
-    name: '1.5 Ton Inverter AC',
-    room: 'hvac',
-    watts: 1400,
-    hoursPerDay: 7,
-    daysPerWeek: 7,
-    icon: 'wind',
-    tip: 'Setting thermostat to 24°C (75°F) instead of 18°C saves up to 24% electricity.'
-  },
-  {
-    id: 'ceiling_fan',
-    name: 'Ceiling Fan (x3)',
-    room: 'hvac',
-    watts: 180,
-    hoursPerDay: 12,
-    daysPerWeek: 7,
-    icon: 'fan',
-    tip: 'Turn off fans when leaving the room; fans cool people, not empty space.'
-  },
-  {
-    id: 'refrigerator',
-    name: 'Double-Door Refrigerator',
-    room: 'kitchen',
-    watts: 180,
-    hoursPerDay: 24,
-    daysPerWeek: 7,
-
