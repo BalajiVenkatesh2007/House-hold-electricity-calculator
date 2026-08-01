@@ -1,209 +1,644 @@
-/**
- * Household Energy Calculator - Appliances Database & Presets
- */
+/* Household Energy Calculator - Modern Cyber Emerald Theme */
 
-const ROOM_CATEGORIES = {
-  hvac: { id: 'hvac', name: 'Heating & Cooling', icon: 'thermometer-sun', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)' },
-  kitchen: { id: 'kitchen', name: 'Kitchen & Cooking', icon: 'utensils', color: '#eab308', bg: 'rgba(234, 179, 8, 0.12)' },
-  laundry: { id: 'laundry', name: 'Laundry & Cleaning', icon: 'washing-machine', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.12)' },
-  lighting: { id: 'lighting', name: 'Lighting & Water', icon: 'lightbulb', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.12)' },
-  entertainment: { id: 'entertainment', name: 'Electronics & Work', icon: 'tv', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.12)' },
-  heavy: { id: 'heavy', name: 'EV & Heavy Duty', icon: 'zap', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)' }
-};
+:root {
+  --bg-body: #090d16;
+  --bg-card: #131929;
+  --bg-card-hover: #1b243b;
+  --bg-glass: rgba(19, 25, 41, 0.85);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: #10b981;
 
-const DEFAULT_APPLIANCES = [
-  {
-    id: 'app_ac_inverter',
-    name: '1.5 Ton Inverter Air Conditioner',
-    room: 'hvac',
-    watts: 1400,
-    quantity: 1,
-    hoursPerDay: 8,
-    daysPerWeek: 7,
-    dutyCycleRatio: 0.65,
-    icon: 'wind',
-    energyRating: '5-Star Inverter',
-    standbyWatts: 5,
-    tip: 'Set thermostat to 24°C (75°F). Every +1°C increases efficiency by 6%.'
-  },
-  {
-    id: 'app_ceiling_fan',
-    name: 'BLDC Energy Saving Ceiling Fan',
-    room: 'hvac',
-    watts: 32,
-    quantity: 3,
-    hoursPerDay: 12,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'fan',
-    energyRating: '5-Star BLDC',
-    standbyWatts: 1,
-    tip: 'Turn off fans in empty rooms. Fans cool people, not ambient air.'
-  },
-  {
-    id: 'app_refrigerator',
-    name: 'Double Door Refrigerator (350L)',
-    room: 'kitchen',
-    watts: 160,
-    quantity: 1,
-    hoursPerDay: 24,
-    daysPerWeek: 7,
-    dutyCycleRatio: 0.42,
-    icon: 'refrigerator',
-    energyRating: '4-Star',
-    standbyWatts: 0,
-    tip: 'Keep condenser coils dust-free and maintain a 2-inch gap behind the fridge.'
-  },
-  {
-    id: 'app_microwave',
-    name: 'Convection Microwave Oven',
-    room: 'kitchen',
-    watts: 1200,
-    quantity: 1,
-    hoursPerDay: 0.4,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'microwave',
-    energyRating: 'Standard',
-    standbyWatts: 4,
-    tip: 'Microwaves use up to 80% less energy than standard electric ovens.'
-  },
-  {
-    id: 'app_induction',
-    name: 'Dual Induction Cooktop',
-    room: 'kitchen',
-    watts: 1800,
-    quantity: 1,
-    hoursPerDay: 1.2,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'flame',
-    energyRating: 'High Efficiency',
-    standbyWatts: 2,
-    tip: 'Match pan size to burner size to eliminate waste heat dispersion.'
-  },
-  {
-    id: 'app_washer',
-    name: 'Front Load Washing Machine',
-    room: 'laundry',
-    watts: 850,
-    quantity: 1,
-    hoursPerDay: 1.0,
-    daysPerWeek: 4,
-    dutyCycleRatio: 1.0,
-    icon: 'shirt',
-    energyRating: '5-Star',
-    standbyWatts: 3,
-    tip: 'Wash with cold water (30°C) to save 60% heater power per cycle.'
-  },
-  {
-    id: 'app_water_geyser',
-    name: 'Storage Water Heater / Geyser',
-    room: 'lighting',
-    watts: 2000,
-    quantity: 1,
-    hoursPerDay: 1.5,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'droplet',
-    energyRating: '3-Star',
-    standbyWatts: 15,
-    tip: 'Use a digital timer switch to heat water only 30 minutes before showers.'
-  },
-  {
-    id: 'app_led_bulbs',
-    name: 'Smart LED Bulbs Pack (9W)',
-    room: 'lighting',
-    watts: 9,
-    quantity: 12,
-    hoursPerDay: 6,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'sun',
-    energyRating: 'A+++ LED',
-    standbyWatts: 0.5,
-    tip: 'LEDs consume 85% less energy than old incandescent bulbs and last 25,000 hrs.'
-  },
-  {
-    id: 'app_smart_tv',
-    name: '55" 4K Smart OLED TV',
-    room: 'entertainment',
-    watts: 130,
-    quantity: 1,
-    hoursPerDay: 5,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'tv',
-    energyRating: 'Smart Ambient',
-    standbyWatts: 6,
-    tip: 'Turn off OLED screen when streaming music or audio podcasts.'
-  },
-  {
-    id: 'app_gaming_pc',
-    name: 'Desktop Workstation & Dual Monitors',
-    room: 'entertainment',
-    watts: 380,
-    quantity: 1,
-    hoursPerDay: 6,
-    daysPerWeek: 7,
-    dutyCycleRatio: 1.0,
-    icon: 'monitor',
-    energyRating: '80-Plus Gold',
-    standbyWatts: 8,
-    tip: 'Use smart surge protector power strips to eliminate phantom standby power.'
-  }
-];
+  --primary-emerald: #10b981;
+  --primary-glow: rgba(16, 185, 129, 0.3);
+  --accent-cyan: #06b6d4;
+  --accent-rose: #f43f5e;
+  --accent-amber: #f59e0b;
+  --accent-purple: #a855f7;
 
-const PRESET_HOMES = {
-  studio_apt: {
-    name: '1-Bedroom Compact Apartment',
-    description: 'Essential appliances, LED lighting, inverter AC, and smart TV.',
-    appliances: [
-      { id: 'app_ac', name: '1.0 Ton Inverter AC', room: 'hvac', watts: 950, quantity: 1, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.6 },
-      { id: 'app_fridge', name: 'Single Door Fridge (190L)', room: 'kitchen', watts: 110, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.4 },
-      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 6, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_tv', name: '43" LED TV', room: 'entertainment', watts: 70, quantity: 1, hoursPerDay: 4, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_laptop', name: 'Laptop Workstation', room: 'entertainment', watts: 65, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 }
-    ]
-  },
-  family_home: {
-    name: '3-Bedroom Family House',
-    description: 'Multiple AC units, laundry suite, kitchen appliances, and water heating.',
-    appliances: [
-      { id: 'app_ac1', name: 'Living Room 1.5T AC', room: 'hvac', watts: 1500, quantity: 1, hoursPerDay: 7, daysPerWeek: 7, dutyCycleRatio: 0.65 },
-      { id: 'app_ac2', name: 'Master Bed 1.2T AC', room: 'hvac', watts: 1200, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 0.6 },
-      { id: 'app_fans', name: 'Ceiling Fans (35W)', room: 'hvac', watts: 35, quantity: 4, hoursPerDay: 10, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_fridge', name: 'French Door Fridge (500L)', room: 'kitchen', watts: 210, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.45 },
-      { id: 'app_cooktop', name: 'Induction Cooktop', room: 'kitchen', watts: 1800, quantity: 1, hoursPerDay: 1.5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_washer', name: 'Front Load Washer', room: 'laundry', watts: 900, quantity: 1, hoursPerDay: 1.0, daysPerWeek: 5, dutyCycleRatio: 1.0 },
-      { id: 'app_geyser', name: 'Water Heater Geyser', room: 'lighting', watts: 2000, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 16, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_tv', name: '65" OLED TV', room: 'entertainment', watts: 150, quantity: 1, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 }
-    ]
-  },
-  eco_smart: {
-    name: 'Zero-Emission Eco Smart Home',
-    description: 'High-efficiency heat pump, BLDC fans, solar offset, and A+++ rated appliances.',
-    appliances: [
-      { id: 'app_hp_ac', name: 'Heat Pump Inverter AC', room: 'hvac', watts: 800, quantity: 2, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.5 },
-      { id: 'app_bldc', name: 'BLDC Ceiling Fans', room: 'hvac', watts: 28, quantity: 4, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_eco_fridge', name: 'A+++ Smart Refrigerator', room: 'kitchen', watts: 90, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.35 },
-      { id: 'app_hp_water', name: 'Heat Pump Water Heater', room: 'lighting', watts: 450, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_smart_leds', name: 'Smart Dimming LEDs (7W)', room: 'lighting', watts: 7, quantity: 15, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_ev', name: 'EV Home Wallbox Charger', room: 'heavy', watts: 3300, quantity: 1, hoursPerDay: 2.5, daysPerWeek: 4, dutyCycleRatio: 1.0 }
-    ]
-  }
-};
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
 
-const CURRENCY_DATABASE = {
-  USD: { symbol: '$', code: 'USD', name: 'US Dollar', rate: 0.16, co2: 0.385, flag: '🇺🇸' },
-  EUR: { symbol: '€', code: 'EUR', name: 'Euro', rate: 0.26, co2: 0.255, flag: '🇪🇺' },
-  GBP: { symbol: '£', code: 'GBP', name: 'British Pound', rate: 0.28, co2: 0.210, flag: '🇬🇧' },
-  INR: { symbol: '₹', code: 'INR', name: 'Indian Rupee', rate: 7.50, co2: 0.710, flag: '🇮🇳' },
-  CAD: { symbol: 'CA$', code: 'CAD', name: 'Canadian Dollar', rate: 0.14, co2: 0.150, flag: '🇨🇦' },
-  AUD: { symbol: 'A$', code: 'AUD', name: 'Australian Dollar', rate: 0.32, co2: 0.650, flag: '🇦🇺' }
-};
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ROOM_CATEGORIES, DEFAULT_APPLIANCES, PRESET_HOMES, CURRENCY_DATABASE };
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-body);
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(16, 185, 129, 0.12), transparent),
+    radial-gradient(ellipse 80% 50% at 80% 110%, rgba(6, 182, 212, 0.12), transparent);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  min-height: 100vh;
+  padding: 24px 16px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header Navbar */
+header.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  padding: 20px 28px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-logo {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, var(--primary-emerald), var(--accent-cyan));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26px;
+  box-shadow: 0 0 25px var(--primary-glow);
+}
+
+.brand-title h1 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-title p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.select-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+}
+
+.select-group label {
+  color: var(--text-muted);
+}
+
+select, input[type="text"], input[type="number"] {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+select:focus, input:focus {
+  border-color: var(--primary-emerald);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-emerald), #059669);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.btn-danger {
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+}
+
+.btn-danger:hover {
+  background: rgba(244, 63, 94, 0.15);
+}
+
+/* Key Metrics Section */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.metric-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.metric-box:hover {
+  border-color: var(--border-active);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.metric-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-emerald);
+}
+
+.metric-box.kwh::before { background: var(--accent-cyan); }
+.metric-box.co2::before { background: var(--accent-purple); }
+.metric-box.savings::before { background: var(--accent-amber); }
+
+.metric-title {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-val {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.metric-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.chip {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+.chip-green { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+.chip-cyan { background: rgba(6, 182, 212, 0.18); color: #38bdf8; }
+.chip-amber { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+
+/* Navigation Tabs */
+.tabs-header {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tab-link {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 12px 22px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.tab-link:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-link.active {
+  color: var(--primary-emerald);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-bottom: 2px solid var(--primary-emerald);
+}
+
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Card Section Panel */
+.section-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-head h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.section-head p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Appliance Form Bar */
+.add-bar {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 1.1fr 1fr 1fr 1fr auto;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .add-bar { grid-template-columns: 1fr 1fr; }
+}
+
+/* Appliance Table */
+.table-responsive {
+  overflow-x: auto;
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+table.data-table th {
+  padding: 14px 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+table.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.92rem;
+  vertical-align: middle;
+}
+
+table.data-table td input[type="text"],
+table.data-table td input[type="number"],
+table.data-table td select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  transition: var(--transition);
+}
+
+table.data-table td input[type="text"]:focus,
+table.data-table td input[type="number"]:focus,
+table.data-table td select:focus {
+  border-color: var(--primary-emerald);
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+table.data-table tr:hover {
+  background: var(--bg-card-hover);
+}
+
+.room-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.icon-btn:hover {
+  color: var(--accent-rose);
+  background: rgba(244, 63, 94, 0.15);
+}
+
+/* Tariff Cards & Form */
+.tariff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.tariff-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-subtle);
+  padding: 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tariff-card:hover {
+  border-color: var(--text-muted);
+}
+
+.tariff-card.active {
+  border-color: var(--primary-emerald);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.tariff-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.tariff-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.config-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+/* Energy Tips Grid */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.tip-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition);
+}
+
+.tip-box:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.tip-top {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.tip-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--primary-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.tip-title-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin-bottom: 4px;
+}
+
+.tip-body {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.tip-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 14px;
+  font-size: 0.85rem;
+}
+
+.savings-highlight {
+  color: var(--primary-emerald);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Simulator Section */
+.sim-group {
+  margin-bottom: 22px;
+}
+
+.sim-label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+}
+
+.range-slider {
+  width: 100%;
+  accent-color: var(--primary-emerald);
+  height: 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sim-summary-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
+  border: 1px solid var(--primary-glow);
+  padding: 22px;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .sim-summary-box { grid-template-columns: 1fr; }
+}
+
+/* Charts Grid */
+.charts-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+@media (max-width: 850px) {
+  .charts-wrapper { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  height: 360px;
+  position: relative;
+}
+
+/* Toast Messages */
+.toast-stack {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast-msg {
+  background: var(--bg-card);
+  border: 1px solid var(--primary-emerald);
+  color: var(--text-main);
+  padding: 14px 22px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  font-size: 0.9rem;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Footer */
+footer.app-footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 24px;
 }
