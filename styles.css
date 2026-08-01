@@ -1,642 +1,209 @@
-/* Household Energy & Cost Calculator - Modern Styling */
+/**
+ * Household Energy Calculator - Appliances Database & Presets
+ */
 
-:root {
-  --bg-dark: #0b0f19;
-  --bg-card: #151c2e;
-  --bg-card-hover: #1c263d;
-  --bg-glass: rgba(21, 28, 46, 0.75);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: #10b981;
-  
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.25);
-  
-  --accent-cyan: #06b6d4;
-  --accent-yellow: #f59e0b;
-  --accent-rose: #f43f5e;
-  --accent-purple: #8b5cf6;
-  
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-subtle: #6b7280;
-  
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+const ROOM_CATEGORIES = {
+  hvac: { id: 'hvac', name: 'Heating & Cooling', icon: 'thermometer-sun', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)' },
+  kitchen: { id: 'kitchen', name: 'Kitchen & Cooking', icon: 'utensils', color: '#eab308', bg: 'rgba(234, 179, 8, 0.12)' },
+  laundry: { id: 'laundry', name: 'Laundry & Cleaning', icon: 'washing-machine', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.12)' },
+  lighting: { id: 'lighting', name: 'Lighting & Water', icon: 'lightbulb', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.12)' },
+  entertainment: { id: 'entertainment', name: 'Electronics & Work', icon: 'tv', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.12)' },
+  heavy: { id: 'heavy', name: 'EV & Heavy Duty', icon: 'zap', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)' }
+};
 
-  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background-color: var(--bg-dark);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
-  color: var(--text-main);
-  font-family: var(--font-body);
-  line-height: 1.5;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.container {
-  max-width: 1380px;
-  margin: 0 auto;
-}
-
-/* Header & Top Bar */
-header.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-card);
-}
-
-.logo-group {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.logo-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 24px;
-  box-shadow: 0 0 20px var(--primary-glow);
-}
-
-.logo-text h1 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 30%, #9ca3af);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.logo-text p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.control-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.88rem;
-}
-
-.control-item label {
-  color: var(--text-muted);
-}
-
-select, input[type="text"], input[type="number"] {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  outline: none;
-  transition: var(--transition);
-}
-
-select:focus, input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 8px var(--primary-glow);
-}
-
-.btn {
-  background: var(--bg-card);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  padding: 9px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: var(--transition);
-}
-
-.btn:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), #059669);
-  color: #fff;
-  border: none;
-  box-shadow: 0 4px 14px var(--primary-glow);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-1px);
-}
-
-.btn-outline-danger {
-  border-color: rgba(244, 63, 94, 0.4);
-  color: #fda4af;
-}
-
-.btn-outline-danger:hover {
-  background: rgba(244, 63, 94, 0.15);
-  border-color: var(--accent-rose);
-}
-
-/* Key Metrics Cards Bar */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 20px;
-  border-radius: var(--radius-md);
-  position: relative;
-  overflow: hidden;
-  transition: var(--transition);
-}
-
-.metric-card:hover {
-  border-color: var(--border-focus);
-  transform: translateY(-2px);
-}
-
-.metric-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--primary);
-}
-
-.metric-card.cost::before { background: var(--primary); }
-.metric-card.kwh::before { background: var(--accent-cyan); }
-.metric-card.carbon::before { background: var(--accent-purple); }
-.metric-card.savings::before { background: var(--accent-yellow); }
-
-.metric-label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.metric-value {
-  font-family: var(--font-heading);
-  font-size: 1.85rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.metric-sub {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.badge {
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-}
-.badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.badge-info { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
-.badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-
-/* Navigation Tabs */
-.nav-tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 24px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.tab-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 12px 20px;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: var(--transition);
-  position: relative;
-  white-space: nowrap;
-}
-
-.tab-btn:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.tab-btn.active {
-  color: var(--primary);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-bottom: 2px solid var(--primary);
-}
-
-/* Tab Panels */
-.tab-panel {
-  display: none;
-}
-.tab-panel.active {
-  display: block;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Main Grid Layout */
-.layout-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-}
-
-@media (max-width: 1024px) {
-  .layout-grid {
-    grid-template-columns: 1fr;
+const DEFAULT_APPLIANCES = [
+  {
+    id: 'app_ac_inverter',
+    name: '1.5 Ton Inverter Air Conditioner',
+    room: 'hvac',
+    watts: 1400,
+    quantity: 1,
+    hoursPerDay: 8,
+    daysPerWeek: 7,
+    dutyCycleRatio: 0.65,
+    icon: 'wind',
+    energyRating: '5-Star Inverter',
+    standbyWatts: 5,
+    tip: 'Set thermostat to 24°C (75°F). Every +1°C increases efficiency by 6%.'
+  },
+  {
+    id: 'app_ceiling_fan',
+    name: 'BLDC Energy Saving Ceiling Fan',
+    room: 'hvac',
+    watts: 32,
+    quantity: 3,
+    hoursPerDay: 12,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'fan',
+    energyRating: '5-Star BLDC',
+    standbyWatts: 1,
+    tip: 'Turn off fans in empty rooms. Fans cool people, not ambient air.'
+  },
+  {
+    id: 'app_refrigerator',
+    name: 'Double Door Refrigerator (350L)',
+    room: 'kitchen',
+    watts: 160,
+    quantity: 1,
+    hoursPerDay: 24,
+    daysPerWeek: 7,
+    dutyCycleRatio: 0.42,
+    icon: 'refrigerator',
+    energyRating: '4-Star',
+    standbyWatts: 0,
+    tip: 'Keep condenser coils dust-free and maintain a 2-inch gap behind the fridge.'
+  },
+  {
+    id: 'app_microwave',
+    name: 'Convection Microwave Oven',
+    room: 'kitchen',
+    watts: 1200,
+    quantity: 1,
+    hoursPerDay: 0.4,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'microwave',
+    energyRating: 'Standard',
+    standbyWatts: 4,
+    tip: 'Microwaves use up to 80% less energy than standard electric ovens.'
+  },
+  {
+    id: 'app_induction',
+    name: 'Dual Induction Cooktop',
+    room: 'kitchen',
+    watts: 1800,
+    quantity: 1,
+    hoursPerDay: 1.2,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'flame',
+    energyRating: 'High Efficiency',
+    standbyWatts: 2,
+    tip: 'Match pan size to burner size to eliminate waste heat dispersion.'
+  },
+  {
+    id: 'app_washer',
+    name: 'Front Load Washing Machine',
+    room: 'laundry',
+    watts: 850,
+    quantity: 1,
+    hoursPerDay: 1.0,
+    daysPerWeek: 4,
+    dutyCycleRatio: 1.0,
+    icon: 'shirt',
+    energyRating: '5-Star',
+    standbyWatts: 3,
+    tip: 'Wash with cold water (30°C) to save 60% heater power per cycle.'
+  },
+  {
+    id: 'app_water_geyser',
+    name: 'Storage Water Heater / Geyser',
+    room: 'lighting',
+    watts: 2000,
+    quantity: 1,
+    hoursPerDay: 1.5,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'droplet',
+    energyRating: '3-Star',
+    standbyWatts: 15,
+    tip: 'Use a digital timer switch to heat water only 30 minutes before showers.'
+  },
+  {
+    id: 'app_led_bulbs',
+    name: 'Smart LED Bulbs Pack (9W)',
+    room: 'lighting',
+    watts: 9,
+    quantity: 12,
+    hoursPerDay: 6,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'sun',
+    energyRating: 'A+++ LED',
+    standbyWatts: 0.5,
+    tip: 'LEDs consume 85% less energy than old incandescent bulbs and last 25,000 hrs.'
+  },
+  {
+    id: 'app_smart_tv',
+    name: '55" 4K Smart OLED TV',
+    room: 'entertainment',
+    watts: 130,
+    quantity: 1,
+    hoursPerDay: 5,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'tv',
+    energyRating: 'Smart Ambient',
+    standbyWatts: 6,
+    tip: 'Turn off OLED screen when streaming music or audio podcasts.'
+  },
+  {
+    id: 'app_gaming_pc',
+    name: 'Desktop Workstation & Dual Monitors',
+    room: 'entertainment',
+    watts: 380,
+    quantity: 1,
+    hoursPerDay: 6,
+    daysPerWeek: 7,
+    dutyCycleRatio: 1.0,
+    icon: 'monitor',
+    energyRating: '80-Plus Gold',
+    standbyWatts: 8,
+    tip: 'Use smart surge protector power strips to eliminate phantom standby power.'
   }
-}
+];
 
-.panel-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-card);
-}
-
-.panel-title {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.panel-title small {
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-/* Appliance List & Form */
-.add-appliance-bar {
-  display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr auto;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  margin-bottom: 20px;
-  align-items: center;
-}
-
-@media (max-width: 900px) {
-  .add-appliance-bar {
-    grid-template-columns: 1fr 1fr;
+const PRESET_HOMES = {
+  studio_apt: {
+    name: '1-Bedroom Compact Apartment',
+    description: 'Essential appliances, LED lighting, inverter AC, and smart TV.',
+    appliances: [
+      { id: 'app_ac', name: '1.0 Ton Inverter AC', room: 'hvac', watts: 950, quantity: 1, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.6 },
+      { id: 'app_fridge', name: 'Single Door Fridge (190L)', room: 'kitchen', watts: 110, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.4 },
+      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 6, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_tv', name: '43" LED TV', room: 'entertainment', watts: 70, quantity: 1, hoursPerDay: 4, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_laptop', name: 'Laptop Workstation', room: 'entertainment', watts: 65, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 }
+    ]
+  },
+  family_home: {
+    name: '3-Bedroom Family House',
+    description: 'Multiple AC units, laundry suite, kitchen appliances, and water heating.',
+    appliances: [
+      { id: 'app_ac1', name: 'Living Room 1.5T AC', room: 'hvac', watts: 1500, quantity: 1, hoursPerDay: 7, daysPerWeek: 7, dutyCycleRatio: 0.65 },
+      { id: 'app_ac2', name: 'Master Bed 1.2T AC', room: 'hvac', watts: 1200, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 0.6 },
+      { id: 'app_fans', name: 'Ceiling Fans (35W)', room: 'hvac', watts: 35, quantity: 4, hoursPerDay: 10, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_fridge', name: 'French Door Fridge (500L)', room: 'kitchen', watts: 210, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.45 },
+      { id: 'app_cooktop', name: 'Induction Cooktop', room: 'kitchen', watts: 1800, quantity: 1, hoursPerDay: 1.5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_washer', name: 'Front Load Washer', room: 'laundry', watts: 900, quantity: 1, hoursPerDay: 1.0, daysPerWeek: 5, dutyCycleRatio: 1.0 },
+      { id: 'app_geyser', name: 'Water Heater Geyser', room: 'lighting', watts: 2000, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 16, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_tv', name: '65" OLED TV', room: 'entertainment', watts: 150, quantity: 1, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 }
+    ]
+  },
+  eco_smart: {
+    name: 'Zero-Emission Eco Smart Home',
+    description: 'High-efficiency heat pump, BLDC fans, solar offset, and A+++ rated appliances.',
+    appliances: [
+      { id: 'app_hp_ac', name: 'Heat Pump Inverter AC', room: 'hvac', watts: 800, quantity: 2, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.5 },
+      { id: 'app_bldc', name: 'BLDC Ceiling Fans', room: 'hvac', watts: 28, quantity: 4, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_eco_fridge', name: 'A+++ Smart Refrigerator', room: 'kitchen', watts: 90, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.35 },
+      { id: 'app_hp_water', name: 'Heat Pump Water Heater', room: 'lighting', watts: 450, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_smart_leds', name: 'Smart Dimming LEDs (7W)', room: 'lighting', watts: 7, quantity: 15, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'app_ev', name: 'EV Home Wallbox Charger', room: 'heavy', watts: 3300, quantity: 1, hoursPerDay: 2.5, daysPerWeek: 4, dutyCycleRatio: 1.0 }
+    ]
   }
-}
+};
 
-.appliances-table-wrapper {
-  overflow-x: auto;
-}
+const CURRENCY_DATABASE = {
+  USD: { symbol: '$', code: 'USD', name: 'US Dollar', rate: 0.16, co2: 0.385, flag: '🇺🇸' },
+  EUR: { symbol: '€', code: 'EUR', name: 'Euro', rate: 0.26, co2: 0.255, flag: '🇪🇺' },
+  GBP: { symbol: '£', code: 'GBP', name: 'British Pound', rate: 0.28, co2: 0.210, flag: '🇬🇧' },
+  INR: { symbol: '₹', code: 'INR', name: 'Indian Rupee', rate: 7.50, co2: 0.710, flag: '🇮🇳' },
+  CAD: { symbol: 'CA$', code: 'CAD', name: 'Canadian Dollar', rate: 0.14, co2: 0.150, flag: '🇨🇦' },
+  AUD: { symbol: 'A$', code: 'AUD', name: 'Australian Dollar', rate: 0.32, co2: 0.650, flag: '🇦🇺' }
+};
 
-table.appliance-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-table.appliance-table th {
-  padding: 12px 14px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-color);
-}
-
-table.appliance-table td {
-  padding: 14px;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.9rem;
-}
-
-table.appliance-table tr:hover {
-  background: var(--bg-card-hover);
-}
-
-.room-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.action-btn-icon {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-}
-
-.action-btn-icon:hover {
-  color: var(--accent-rose);
-  background: rgba(244, 63, 94, 0.1);
-}
-
-/* Dynamic Energy Tips Cards */
-.tips-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 18px;
-}
-
-.tip-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  transition: var(--transition);
-}
-
-.tip-card:hover {
-  border-color: var(--accent-cyan);
-  transform: translateY(-2px);
-}
-
-.tip-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.tip-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.tip-card.high .tip-icon {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-yellow);
-}
-
-.tip-title {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.05rem;
-  margin-bottom: 4px;
-}
-
-.tip-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-  margin-bottom: 16px;
-}
-
-.tip-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid var(--border-color);
-  padding-top: 12px;
-  font-size: 0.82rem;
-}
-
-.est-savings {
-  color: var(--primary);
-  font-weight: 700;
-  font-size: 0.95rem;
-}
-
-/* What-If Simulator Section */
-.simulator-box {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 18px;
-}
-
-.sim-control-group {
-  margin-bottom: 20px;
-}
-
-.sim-control-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.sim-slider {
-  width: 100%;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.sim-comparison-card {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
-  border: 1px solid var(--primary-glow);
-  padding: 18px;
-  border-radius: var(--radius-md);
-  text-align: center;
-}
-
-/* Charts Wrapper */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.chart-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  height: 340px;
-  position: relative;
-}
-
-/* Tariff Settings Form */
-.tariff-options-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.tariff-mode-card {
-  background: rgba(0, 0, 0, 0.25);
-  border: 2px solid var(--border-color);
-  padding: 18px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.tariff-mode-card:hover {
-  border-color: var(--text-muted);
-}
-
-.tariff-mode-card.selected {
-  border-color: var(--primary);
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.tariff-mode-card h4 {
-  font-family: var(--font-heading);
-  margin-bottom: 6px;
-}
-
-.tariff-mode-card p {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.tier-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Toast Notifications */
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.toast {
-  background: var(--bg-card);
-  border: 1px solid var(--border-focus);
-  color: var(--text-main);
-  padding: 12px 18px;
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  font-size: 0.88rem;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* Footer */
-footer {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--text-subtle);
-  border-top: 1px solid var(--border-color);
-  padding-top: 20px;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { ROOM_CATEGORIES, DEFAULT_APPLIANCES, PRESET_HOMES, CURRENCY_DATABASE };
 }
