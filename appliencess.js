@@ -13,7 +13,7 @@ const ROOM_CATEGORIES = {
 
 const DEFAULT_APPLIANCES = [
   {
-    id: 'app_ac_inverter',
+    id: 'def_ac_inverter',
     name: '1.5 Ton Inverter Air Conditioner',
     room: 'hvac',
     watts: 1400,
@@ -27,7 +27,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Set thermostat to 24°C (75°F). Every +1°C increases efficiency by 6%.'
   },
   {
-    id: 'app_ceiling_fan',
+    id: 'def_ceiling_fan',
     name: 'BLDC Energy Saving Ceiling Fan',
     room: 'hvac',
     watts: 32,
@@ -41,7 +41,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Turn off fans in empty rooms. Fans cool people, not ambient air.'
   },
   {
-    id: 'app_refrigerator',
+    id: 'def_refrigerator',
     name: 'Double Door Refrigerator (350L)',
     room: 'kitchen',
     watts: 160,
@@ -55,7 +55,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Keep condenser coils dust-free and maintain a 2-inch gap behind the fridge.'
   },
   {
-    id: 'app_microwave',
+    id: 'def_microwave',
     name: 'Convection Microwave Oven',
     room: 'kitchen',
     watts: 1200,
@@ -69,7 +69,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Microwaves use up to 80% less energy than standard electric ovens.'
   },
   {
-    id: 'app_induction',
+    id: 'def_induction',
     name: 'Dual Induction Cooktop',
     room: 'kitchen',
     watts: 1800,
@@ -83,7 +83,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Match pan size to burner size to eliminate waste heat dispersion.'
   },
   {
-    id: 'app_washer',
+    id: 'def_washer',
     name: 'Front Load Washing Machine',
     room: 'laundry',
     watts: 850,
@@ -97,7 +97,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Wash with cold water (30°C) to save 60% heater power per cycle.'
   },
   {
-    id: 'app_water_geyser',
+    id: 'def_water_geyser',
     name: 'Storage Water Heater / Geyser',
     room: 'lighting',
     watts: 2000,
@@ -111,7 +111,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Use a digital timer switch to heat water only 30 minutes before showers.'
   },
   {
-    id: 'app_led_bulbs',
+    id: 'def_led_bulbs',
     name: 'Smart LED Bulbs Pack (9W)',
     room: 'lighting',
     watts: 9,
@@ -125,7 +125,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'LEDs consume 85% less energy than old incandescent bulbs and last 25,000 hrs.'
   },
   {
-    id: 'app_smart_tv',
+    id: 'def_smart_tv',
     name: '55" 4K Smart OLED TV',
     room: 'entertainment',
     watts: 130,
@@ -139,7 +139,7 @@ const DEFAULT_APPLIANCES = [
     tip: 'Turn off OLED screen when streaming music or audio podcasts.'
   },
   {
-    id: 'app_gaming_pc',
+    id: 'def_gaming_pc',
     name: 'Desktop Workstation & Dual Monitors',
     room: 'entertainment',
     watts: 380,
@@ -159,38 +159,38 @@ const PRESET_HOMES = {
     name: '1-Bedroom Compact Apartment',
     description: 'Essential appliances, LED lighting, inverter AC, and smart TV.',
     appliances: [
-      { id: 'app_ac', name: '1.0 Ton Inverter AC', room: 'hvac', watts: 950, quantity: 1, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.6 },
-      { id: 'app_fridge', name: 'Single Door Fridge (190L)', room: 'kitchen', watts: 110, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.4 },
-      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 6, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_tv', name: '43" LED TV', room: 'entertainment', watts: 70, quantity: 1, hoursPerDay: 4, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_laptop', name: 'Laptop Workstation', room: 'entertainment', watts: 65, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 }
+      { id: 'apt_ac', name: '1.0 Ton Inverter AC', room: 'hvac', watts: 950, quantity: 1, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.6 },
+      { id: 'apt_fridge', name: 'Single Door Fridge (190L)', room: 'kitchen', watts: 110, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.4 },
+      { id: 'apt_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 6, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'apt_tv', name: '43" LED TV', room: 'entertainment', watts: 70, quantity: 1, hoursPerDay: 4, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'apt_laptop', name: 'Laptop Workstation', room: 'entertainment', watts: 65, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 }
     ]
   },
   family_home: {
     name: '3-Bedroom Family House',
     description: 'Multiple AC units, laundry suite, kitchen appliances, and water heating.',
     appliances: [
-      { id: 'app_ac1', name: 'Living Room 1.5T AC', room: 'hvac', watts: 1500, quantity: 1, hoursPerDay: 7, daysPerWeek: 7, dutyCycleRatio: 0.65 },
-      { id: 'app_ac2', name: 'Master Bed 1.2T AC', room: 'hvac', watts: 1200, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 0.6 },
-      { id: 'app_fans', name: 'Ceiling Fans (35W)', room: 'hvac', watts: 35, quantity: 4, hoursPerDay: 10, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_fridge', name: 'French Door Fridge (500L)', room: 'kitchen', watts: 210, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.45 },
-      { id: 'app_cooktop', name: 'Induction Cooktop', room: 'kitchen', watts: 1800, quantity: 1, hoursPerDay: 1.5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_washer', name: 'Front Load Washer', room: 'laundry', watts: 900, quantity: 1, hoursPerDay: 1.0, daysPerWeek: 5, dutyCycleRatio: 1.0 },
-      { id: 'app_geyser', name: 'Water Heater Geyser', room: 'lighting', watts: 2000, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 16, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_tv', name: '65" OLED TV', room: 'entertainment', watts: 150, quantity: 1, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 }
+      { id: 'fam_ac1', name: 'Living Room 1.5T AC', room: 'hvac', watts: 1500, quantity: 1, hoursPerDay: 7, daysPerWeek: 7, dutyCycleRatio: 0.65 },
+      { id: 'fam_ac2', name: 'Master Bed 1.2T AC', room: 'hvac', watts: 1200, quantity: 1, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 0.6 },
+      { id: 'fam_fans', name: 'Ceiling Fans (35W)', room: 'hvac', watts: 35, quantity: 4, hoursPerDay: 10, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'fam_fridge', name: 'French Door Fridge (500L)', room: 'kitchen', watts: 210, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.45 },
+      { id: 'fam_cooktop', name: 'Induction Cooktop', room: 'kitchen', watts: 1800, quantity: 1, hoursPerDay: 1.5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'fam_washer', name: 'Front Load Washer', room: 'laundry', watts: 900, quantity: 1, hoursPerDay: 1.0, daysPerWeek: 5, dutyCycleRatio: 1.0 },
+      { id: 'fam_geyser', name: 'Water Heater Geyser', room: 'lighting', watts: 2000, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'fam_leds', name: 'LED Bulbs (9W)', room: 'lighting', watts: 9, quantity: 16, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'fam_tv', name: '65" OLED TV', room: 'entertainment', watts: 150, quantity: 1, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 }
     ]
   },
   eco_smart: {
     name: 'Zero-Emission Eco Smart Home',
     description: 'High-efficiency heat pump, BLDC fans, solar offset, and A+++ rated appliances.',
     appliances: [
-      { id: 'app_hp_ac', name: 'Heat Pump Inverter AC', room: 'hvac', watts: 800, quantity: 2, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.5 },
-      { id: 'app_bldc', name: 'BLDC Ceiling Fans', room: 'hvac', watts: 28, quantity: 4, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_eco_fridge', name: 'A+++ Smart Refrigerator', room: 'kitchen', watts: 90, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.35 },
-      { id: 'app_hp_water', name: 'Heat Pump Water Heater', room: 'lighting', watts: 450, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_smart_leds', name: 'Smart Dimming LEDs (7W)', room: 'lighting', watts: 7, quantity: 15, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
-      { id: 'app_ev', name: 'EV Home Wallbox Charger', room: 'heavy', watts: 3300, quantity: 1, hoursPerDay: 2.5, daysPerWeek: 4, dutyCycleRatio: 1.0 }
+      { id: 'eco_hp_ac', name: 'Heat Pump Inverter AC', room: 'hvac', watts: 800, quantity: 2, hoursPerDay: 6, daysPerWeek: 7, dutyCycleRatio: 0.5 },
+      { id: 'eco_bldc', name: 'BLDC Ceiling Fans', room: 'hvac', watts: 28, quantity: 4, hoursPerDay: 8, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'eco_fridge', name: 'A+++ Smart Refrigerator', room: 'kitchen', watts: 90, quantity: 1, hoursPerDay: 24, daysPerWeek: 7, dutyCycleRatio: 0.35 },
+      { id: 'eco_hp_water', name: 'Heat Pump Water Heater', room: 'lighting', watts: 450, quantity: 1, hoursPerDay: 2.0, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'eco_smart_leds', name: 'Smart Dimming LEDs (7W)', room: 'lighting', watts: 7, quantity: 15, hoursPerDay: 5, daysPerWeek: 7, dutyCycleRatio: 1.0 },
+      { id: 'eco_ev', name: 'EV Home Wallbox Charger', room: 'heavy', watts: 3300, quantity: 1, hoursPerDay: 2.5, daysPerWeek: 4, dutyCycleRatio: 1.0 }
     ]
   }
 };
